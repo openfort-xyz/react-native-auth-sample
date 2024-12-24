@@ -1,50 +1,97 @@
-# Welcome to your Expo app 👋
+# Openfort react native
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
+## Install required packages:
 
-1. Install dependencies
+Using the package manager of your preference, install the openfort-js react native library, e.g. with yarn: `yarn add @openfort/react-native`.
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+Since react native requires installing native dependencies directly, you also have to install these required dependencies
+```
+yarn add buffer react-native-crypto react-native-get-random-values react-native-randombytes stream-browserify react-native-mmkv
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Setup your metro config 
 
-## Learn more
+If you do not already have a `metro.config.js`, create one with those required extra node modules:
+```
+// sample metro.config.js
+const { getDefaultConfig } = require('expo/metro-config');
 
-To learn more about developing your project with Expo, look at the following resources:
+module.exports = (() => {
+  const config = getDefaultConfig(__dirname);
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+  // Add shims for Node.js modules like crypto and stream
+  config.resolver.extraNodeModules = {
+    crypto: require.resolve('react-native-crypto'),
+    stream: require.resolve('stream-browserify'),
+    buffer: require.resolve('buffer'),
+  };
 
-## Join the community
+  return config;
+})();
 
-Join our community of developers creating universal apps.
+```
+## Import `Openfort` at the top of your app
+The first file loaded should be Openfort-js polyfills: 
+```
+import  "@openfort/react-native/polyfills";
+```
+This will ensure the correct modules are imported and will ensure `openfort-js` works properly.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Render secure WebView
+
+Openfort uses a `WebView` (from `react-native-webview`) to operate as a secure environment, managing the private key and executing wallet operations. [Learn more](https://www.openfort.xyz/docs/security#embedded-self-custodial-signer).
+
+This WebView needs to always be displayed, it is recommended to put it on top of your app. It is wrapped inside a view with `flex: 0`
+
+Simply import it from `@openfort/react-native`
+
+```
+// Sample app/_layout.tsx using expo router
+import { OpenfortCommunicationWebView } from  '@openfort/react-native';
+
+export default function RootLayout() {
+
+  return (
+    <>
+	  <OpenfortCommunicationWebView />
+      <Slot />
+    </>
+  );
+}
+```
+
+## Notes
+
+Because we are using `mmkv` storage, expo-go will not work. To run your app use `expo run:ios` or `expo run:android`.
+ 
+# Sample
+
+This is a sample to showcase the use of `@openfort/react-native`. This sample is inspired on the [openfort-js auth sample](https://github.com/openfort-xyz/openfort-js/tree/main/examples/apps/auth-sample). 
+
+To start the s
+
+Here is a breakdown of the main parts of the sample.
+
+## `OpenfortProvider`
+
+The app is wrapped with `OpenfortProvider`. This loads the WebView and creates a react context to simplify some of openfort funcitonalities with `useOpenfort` hook.
+
+```
+// app/_layout.tsx
+
+export default function RootLayout() {
+
+  return (
+    <OpenfortProvider>
+      <Slot />
+    </OpenfortProvider>
+  );
+}
+```
+
+## Encrytion Session
+
+The sample uses the backend of another sample in this repository. This is in `utils/getEncryptionSession`. You can find the source code for the backend [here](https://github.com/openfort-xyz/openfort-js/blob/main/examples/apps/auth-sample/src/pages/api/protected-create-encryption-session.ts).
+
+In a real app you would host your encryption session with your endpoints. [Learn more](https://www.openfort.xyz/docs/guides/auth/recovery).
