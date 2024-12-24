@@ -69,8 +69,6 @@ Because we are using `mmkv` storage, expo-go will not work. To run your app use 
 
 This is a sample to showcase the use of `@openfort/react-native`. This sample is inspired on the [openfort-js auth sample](https://github.com/openfort-xyz/openfort-js/tree/main/examples/apps/auth-sample). 
 
-To start the s
-
 Here is a breakdown of the main parts of the sample.
 
 ## `OpenfortProvider`
