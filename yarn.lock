@@ -1694,10 +1694,10 @@
   dependencies:
     semver "^7.3.5"
 
-"@openfort/openfort-js@^0.8.15":
-  version "0.8.15"
-  resolved "https://registry.yarnpkg.com/@openfort/openfort-js/-/openfort-js-0.8.15.tgz#6ca0f372f81d2864820264de8ce7ce81310cdc34"
-  integrity sha512-cCpBR8FYd6ut4Lw8dL5YFYA42H/C4MOH6r6pBABx95e6uagnuOPvc3wwDM8389+auHmhgep8ihfgRK69epOZLA==
+"@openfort/openfort-js@^0.8.16":
+  version "0.8.16"
+  resolved "https://registry.yarnpkg.com/@openfort/openfort-js/-/openfort-js-0.8.16.tgz#980f1b814cc7ec5bc34059e49ade26b2edd41c37"
+  integrity sha512-CTpgCaeL/0ThYEas4rmcfhynH0MSQe6WPazg03FSnGn5GlK6RifUQ31o3ih1gTjBKKWdoZzmWjdE+wQQhlVxnA==
   dependencies:
     "@ethersproject/abstract-signer" "^5.7.0"
     "@ethersproject/bytes" "^5.7.0"
@@ -1718,14 +1718,12 @@
     stream-browserify "^3.0.0"
     uuid "^8.3.2"
 
-"@openfort/react-native@./openfort-react-native-v0.0.4.tgz":
-  version "0.0.0"
-  resolved "./openfort-react-native-v0.0.4.tgz#5fa05408733eb5789c039c103797d33ca7f3cbda"
+"@openfort/react-native@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@openfort/react-native/-/react-native-0.0.1.tgz#d1b5c219a9c395913cdf37a3c5e2ea0354d70760"
+  integrity sha512-mfrT6VDTHr4rV59j41E3ed6H4jBEDvhmi6O+x9EP4+fgOeVxEF79kADETPqc/zq4BhhRlGvEDIsGWnYlj8J+7Q==
   dependencies:
     events "^3.3.0"
-    react "18.3.1"
-    react-dom "18.3.1"
-    react-native "0.76.5"
     react-native-get-random-values "^1.11.0"
     react-native-mmkv "^3.2.0"
     react-native-randombytes "^3.6.1"
