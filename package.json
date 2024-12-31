@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
-    "@openfort/react-native": "./react-native-openfort-20241224105129.tgz",
+    "@openfort/react-native": "./openfort-react-native.tgz",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/native": "^7.0.0",
     "buffer": "^6.0.3",

@@ -3,7 +3,7 @@ PODS:
   - DoubleConversion (1.1.6)
   - EXConstants (17.0.3):
     - ExpoModulesCore
-  - Expo (52.0.21):
+  - Expo (52.0.23):
     - ExpoModulesCore
   - ExpoAsset (11.0.1):
     - ExpoModulesCore
@@ -15,7 +15,7 @@ PODS:
     - ExpoModulesCore
   - ExpoHaptics (14.0.0):
     - ExpoModulesCore
-  - ExpoHead (4.0.14):
+  - ExpoHead (4.0.15):
     - ExpoModulesCore
   - ExpoKeepAwake (14.0.1):
     - ExpoModulesCore
@@ -2101,13 +2101,13 @@ SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   EXConstants: dd2fe64c6cdb1383b694c309a63028a8e9f2be6d
-  Expo: 1544b630fdf4f47d8fe376c2e422f46cd3ed90d4
+  Expo: 37cea4167605a3a1b88fa0caf8349ae76c0d389c
   ExpoAsset: 8138f2a9ec55ae1ad7c3871448379f7d97692d15
   ExpoBlur: 562b3da84d3cd79016c411671eaf71a404266415
   ExpoFileSystem: 179a0661fd6d3c4e5d7e500a99a9cd8b295d9566
   ExpoFont: 260fb85279912421894060d9aea453cee4ffc01c
   ExpoHaptics: e636188d1d5f7ccb79f3c1bfab47aaf5a1768c73
-  ExpoHead: 9d3c117373c48e147eee6f729b9afde1ccfa03df
+  ExpoHead: 83465614d1af3df77a0db724a24a43648e3daefa
   ExpoKeepAwake: 783e68647b969b210a786047c3daa7b753dcac1f
   ExpoLinking: a8332a219379ba80f8e612d5a5de4a3da446886e
   ExpoModulesCore: 41844ce131433b266261b44012d5b41ac0513999
