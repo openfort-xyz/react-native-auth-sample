@@ -1,9 +1,10 @@
+
 # Openfort react native
 
 
 ## Install required packages:
 
-Using the package manager of your preference, install the openfort-js react native library, e.g. with yarn: `yarn add @openfort/react-native`.
+Using the package manager of your preference, install the openfort-js react native library, e.g. with yarn: `yarn add @openfort/react-native @openfort/openfort-js`.
 
 Since react native requires installing native dependencies directly, you also have to install these required dependencies
 ```
@@ -38,6 +39,23 @@ import  "@openfort/react-native/polyfills";
 ```
 This will ensure the correct modules are imported and will ensure `openfort-js` works properly.
 
+## Configure `Openfort`
+
+Configure openfort, the same way that you would with openfort-js
+```
+import Openfort from "@openfort/openfort-js";
+
+const openfort = new Openfort({
+  baseConfiguration: {
+    publishableKey: "YOUR_OPENFORT_PUBLISHABLE_KEY",
+  },
+  shieldConfiguration: {
+    shieldPublishableKey: "YOUR_SHIELD_PUBLISHABLE_KEY",
+  }
+});
+```
+Check out the documentation [here](https://www.openfort.xyz/docs/guides/getting-started#4-import-openfort-into-your-app)
+
 ## Render secure WebView
 
 Openfort uses a `WebView` (from `react-native-webview`) to operate as a secure environment, managing the private key and executing wallet operations. [Learn more](https://www.openfort.xyz/docs/security#embedded-self-custodial-signer).
@@ -48,13 +66,13 @@ Simply import it from `@openfort/react-native`
 
 ```
 // Sample app/_layout.tsx using expo router
-import { OpenfortCommunicationWebView } from  '@openfort/react-native';
+import { Iframe } from  '@openfort/react-native';
 
 export default function RootLayout() {
 
   return (
     <>
-      <OpenfortCommunicationWebView />
+      <Iframe />
       <Slot />
     </>
   );
