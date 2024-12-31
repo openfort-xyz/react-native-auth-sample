@@ -5,9 +5,9 @@ import {
   TokenType,
   type AuthPlayerResponse,
   type Provider,
-  type ShieldAuthentication,
-  Iframe
-} from '@openfort/react-native';
+  type ShieldAuthentication
+} from '@openfort/openfort-js';
+import { Iframe } from '@openfort/react-native';
 import type React from 'react';
 import {
   createContext,

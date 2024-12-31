@@ -1,4 +1,4 @@
-import Openfort from "@openfort/react-native";
+import Openfort from "@openfort/openfort-js";
 
 export const openfort = new Openfort({
   baseConfiguration: {

@@ -1718,21 +1718,17 @@
     stream-browserify "^3.0.0"
     uuid "^8.3.2"
 
-"@openfort/react-native@./openfort-react-native.tgz":
+"@openfort/react-native@./openfort-react-native-v0.0.4.tgz":
   version "0.0.0"
-  resolved "./openfort-react-native.tgz#612bd2dab76f6572a41f3c066984170d4d52aa1d"
+  resolved "./openfort-react-native-v0.0.4.tgz#5fa05408733eb5789c039c103797d33ca7f3cbda"
   dependencies:
-    "@openfort/openfort-js" "^0.8.15"
     events "^3.3.0"
     react "18.3.1"
     react-dom "18.3.1"
     react-native "0.76.5"
-    react-native-gesture-handler "~2.20.2"
     react-native-get-random-values "^1.11.0"
     react-native-mmkv "^3.2.0"
     react-native-randombytes "^3.6.1"
-    react-native-screens "~4.1.0"
-    react-native-web "~0.19.13"
     react-native-webview "13.12.5"
     text-encoding "^0.7.0"
 
