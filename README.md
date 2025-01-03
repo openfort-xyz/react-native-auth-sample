@@ -1,17 +1,38 @@
 
-# Openfort react native
+# Openfort Auth React Native
 
+## Notes
+Because we are using `mmkv` storage, expo-go will not work. To run your app use `expo run:ios` or `expo run:android`.
 
-## Install required packages:
+## Setup
 
-Using the package manager of your preference, install the openfort-js react native library, e.g. with yarn: `yarn add @openfort/react-native @openfort/openfort-js`.
-
-Since react native requires installing native dependencies directly, you also have to install these required dependencies
+1. Clone this repository and open it in your terminal. 
+```sh
+git clone https://github.com/openfort-xyz/react-native-auth-sample.git
 ```
-yarn add buffer react-native-crypto react-native-get-random-values react-native-randombytes stream-browserify react-native-mmkv
+
+2. Install the necessary dependencies (including [Openfort Auth](https://www.npmjs.com/package/@openfort/openfort-js)) with `npm`.
+```sh
+npm i 
 ```
 
-## Setup your metro config 
+1. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.xyz/docs/guides/client/api-keys).
+```sh
+# In your terminal, create .env.local from .env.example
+cp .env.example .env.local
+
+# Add your Openfort keys to .env.local
+EXPO_PUBLIC_OPENFORT_PUBLIC_KEY=
+EXPO_PUBLIC_SHIELD_API_KEY=
+
+EXPO_PUBLIC_DEV_EMAIL=
+EXPO_PUBLIC_DEV_PWD=
+
+EXPO_PUBLIC_CHAIN_ID=
+```
+
+
+## How it works
 
 If you do not already have a `metro.config.js`, create one with those required extra node modules:
 ```
@@ -32,14 +53,14 @@ module.exports = (() => {
 })();
 
 ```
-## Import `Openfort` at the top of your app
+### Import `Openfort` at the top of your app
 The first file loaded should be Openfort-js polyfills: 
 ```
 import  "@openfort/react-native/polyfills";
 ```
 This will ensure the correct modules are imported and will ensure `openfort-js` works properly.
 
-## Configure `Openfort`
+### Configure `Openfort`
 
 Configure openfort, the same way that you would with openfort-js
 ```
@@ -56,7 +77,7 @@ const openfort = new Openfort({
 ```
 Check out the documentation [here](https://www.openfort.xyz/docs/guides/getting-started#4-import-openfort-into-your-app)
 
-## Render secure WebView
+### Render secure WebView
 
 Openfort uses a `WebView` (from `react-native-webview`) to operate as a secure environment, managing the private key and executing wallet operations. [Learn more](https://www.openfort.xyz/docs/security#embedded-self-custodial-signer).
 
@@ -79,17 +100,7 @@ export default function RootLayout() {
 }
 ```
 
-## Notes
-
-Because we are using `mmkv` storage, expo-go will not work. To run your app use `expo run:ios` or `expo run:android`.
- 
-# Sample
-
-This is a sample to showcase the use of `@openfort/react-native`. This sample is inspired on the [openfort-js auth sample](https://github.com/openfort-xyz/openfort-js/tree/main/examples/apps/auth-sample). 
-
-Here is a breakdown of the main parts of the sample.
-
-## `OpenfortProvider`
+### `OpenfortProvider`
 
 The app is wrapped with `OpenfortProvider`. This loads the WebView and creates a react context to simplify some of openfort funcitonalities with `useOpenfort` hook.
 
@@ -106,7 +117,7 @@ export default function RootLayout() {
 }
 ```
 
-## Encrytion Session
+## Encryption Session
 
 The sample uses the backend of another sample in this repository. This is in `utils/getEncryptionSession`. You can find the source code for the backend [here](https://github.com/openfort-xyz/openfort-js/blob/main/examples/apps/auth-sample/src/pages/api/protected-create-encryption-session.ts).
 
