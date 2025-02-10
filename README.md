@@ -1,6 +1,8 @@
 
 # Openfort Auth React Native
 
+Check the full guide [in the docs](https://www.openfort.xyz/docs/guides/javascript/react-native)
+
 ## Notes
 Because we are using `mmkv` storage, expo-go will not work. To run your app use `expo run:ios` or `expo run:android`.
 
@@ -16,7 +18,7 @@ git clone https://github.com/openfort-xyz/react-native-auth-sample.git
 npm i 
 ```
 
-1. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.xyz/docs/guides/client/api-keys).
+1. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.xyz/docs/api-keys).
 ```sh
 # In your terminal, create .env.local from .env.example
 cp .env.example .env.local
@@ -121,4 +123,4 @@ export default function RootLayout() {
 
 The sample uses the backend of another sample in this repository. This is in `utils/getEncryptionSession`. You can find the source code for the backend [here](https://github.com/openfort-xyz/openfort-js/blob/main/examples/apps/auth-sample/src/pages/api/protected-create-encryption-session.ts).
 
-In a real app you would host your encryption session with your endpoints. [Learn more](https://www.openfort.xyz/docs/guides/auth/recovery).
+In a real app you would host your encryption session with your endpoints. [Learn more](https://www.openfort.xyz/docs/guides/javascript/embedded-signer/recovery).
