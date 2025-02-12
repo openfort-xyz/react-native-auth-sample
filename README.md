@@ -124,3 +124,12 @@ export default function RootLayout() {
 The sample uses the backend of another sample in this repository. This is in `utils/getEncryptionSession`. You can find the source code for the backend [here](https://github.com/openfort-xyz/openfort-js/blob/main/examples/apps/auth-sample/src/pages/api/protected-create-encryption-session.ts).
 
 In a real app you would host your encryption session with your endpoints. [Learn more](https://www.openfort.xyz/docs/guides/javascript/embedded-signer/recovery).
+
+
+If you want to run a Node.js backend yourself, please refer to [this sample](https://github.com/smarthug/openfort-node-sample).
+
+Change API URL at `utils/getEncryptionSession`.
+````diff
+- const api = "https://openfort-auth-non-custodial.vercel.app/api/protected-create-encryption-session";
++ const api = "http://localhost:3000/api/protected-create-encryption-session";
+````
