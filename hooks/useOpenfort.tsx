@@ -36,7 +36,7 @@ interface ContextType {
     chainId: number
     password?: string,
   }) => Promise<{ error?: string }>;
-  auth: (accessToken: string) => Promise<AuthPlayerResponse>;
+  auth: (platform: 'ios' | 'android',idToken: string) => Promise<AuthPlayerResponse>;
 
   signMessage: (
     message: string,
@@ -141,11 +141,11 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
   }, []);
 
   const auth = useCallback(
-    async (accessToken: string): Promise<AuthPlayerResponse> => {
+    async (platform: 'ios'|'android',idToken: string): Promise<AuthPlayerResponse> => {
       try {
         return await openfort.authenticateWithThirdPartyProvider({
           provider: ThirdPartyOAuthProvider.SUPABASE,
-          token: accessToken,
+          token: idToken,
           tokenType: TokenType.CUSTOM_TOKEN,
         });
       } catch (err) {

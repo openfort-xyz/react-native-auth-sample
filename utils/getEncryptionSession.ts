@@ -5,7 +5,7 @@ export const getEncryptionSession = async (): Promise<string> => {
     // You can find the source code for the backend in the following link:
     // https://github.com/openfort-xyz/openfort-js/blob/main/examples/apps/auth-sample/src/pages/api/protected-create-encryption-session.ts
 
-    const api = "https://openfort-auth-non-custodial.vercel.app/api/protected-create-encryption-session";
+    const api = "https://create-next-app.openfort.xyz/api/protected-create-encryption-session";
     const response = await fetch(api, {
       method: 'POST',
       headers: {
