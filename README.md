@@ -18,7 +18,10 @@ git clone https://github.com/openfort-xyz/react-native-auth-sample.git
 npm i 
 ```
 
-1. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.xyz/docs/api-keys).
+3. Clone the (sample backend repository)[https://github.com/openfort-xyz/auth-sample-backend]
+    Set up the backend sample and set the port to 3110.
+
+4. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.xyz/docs/api-keys).
 ```sh
 # In your terminal, create .env.local from .env.example
 cp .env.example .env.local
@@ -118,9 +121,3 @@ export default function RootLayout() {
   );
 }
 ```
-
-## Encryption Session
-
-The sample uses the backend of another sample in this repository. This is in `utils/getEncryptionSession`. You can find the source code for the backend [here](https://github.com/openfort-xyz/openfort-js/blob/main/examples/apps/auth-sample/src/pages/api/protected-create-encryption-session.ts).
-
-In a real app you would host your encryption session with your endpoints. [Learn more](https://www.openfort.xyz/docs/guides/javascript/embedded-signer/recovery).

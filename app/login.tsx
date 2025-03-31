@@ -45,6 +45,7 @@ const Login = () => {
 
       <View style={{ marginTop: "auto" }} >
         <Button title="set dev" color={"#ddd"} onPress={() => {
+          localStorage.clear()
           setEmail(process.env.EXPO_PUBLIC_DEV_EMAIL || "Configure your .env file")
           setPassword(process.env.EXPO_PUBLIC_DEV_PWD || "")
         }} />
