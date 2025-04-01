@@ -66,6 +66,33 @@ const Login = () => {
             </View>
           </View>
         )}
+        <TextInput
+          style={commonStyles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={commonStyles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <Button title="Login" onPress={handleLogin} />
+        <Text style={{ marginTop: 10 }}>or</Text>
+        <Button title="Register" onPress={() => router.push("/register")} />
+      </View>
+
+      <View style={{ marginTop: "auto" }} >
+        <Button title="set dev" color={"#ddd"} onPress={() => {
+          localStorage.clear()
+          setEmail(process.env.EXPO_PUBLIC_DEV_EMAIL || "Configure your .env file")
+          setPassword(process.env.EXPO_PUBLIC_DEV_PWD || "")
+        }} />
       </View>
 
       {showTraditionalLogin && (
