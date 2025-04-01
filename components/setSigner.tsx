@@ -3,7 +3,6 @@ import React from 'react';
 import { Button, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useOpenfort } from '../hooks/useOpenfort';
 import { commonStyles } from '../styles/styles';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants'
 
 const chainId = Number(process.env.EXPO_PUBLIC_CHAIN_ID);
