@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, Button, TextInput } from "react-native";
+import { Text, View, StyleSheet, Button, TextInput, Alert } from "react-native";
 import { useOpenfort } from "../hooks/useOpenfort";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
@@ -15,15 +15,45 @@ export default function Register() {
   const [name, setName] = useState("");
   const [showTraditionalSignup, setShowTraditionalSignup] = useState(false);
 
-  const handleSignUp = async () => {
+  const validateFields = () => {
+    if (!name.trim()) {
+      Alert.alert('Error', 'Name cannot be empty');
+      return false;
+    }
+    
+    if (!email.trim()) {
+      Alert.alert('Error', 'Email cannot be empty');
+      return false;
+    }
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      alert("Please enter a valid email address.");
+      Alert.alert('Error', 'Please enter a valid email address');
+      return false;
+    }
+    
+    if (!password.trim()) {
+      Alert.alert('Error', 'Password cannot be empty');
+      return false;
+    }
+    
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password should be at least 6 characters');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSignUp = async () => {
+    if (!validateFields()) {
       return;
     }
 
-    await signUpWithEmailPassword(email, password, name);
-    router.push("/main");
+    const result = await signUpWithEmailPassword(email, password, name);
+    if (!result.error) {
+      router.replace("/main");
+    }
   }
 
   const handleAuthCancellation = () => {
@@ -38,7 +68,7 @@ export default function Register() {
         {!showTraditionalSignup ? (
           <View style={styles.nativeAuthContainer}>
             <Text style={styles.subtitle}>Sign up with:</Text>
-            <Auth onDismiss={handleAuthCancellation} />
+            <Auth onDismiss={handleAuthCancellation} type="register" />
             <Button 
               title="Use email & password instead" 
               onPress={handleAuthCancellation} 
@@ -57,6 +87,8 @@ export default function Register() {
               placeholder="Email"
               value={email}
               onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
             <TextInput
               style={commonStyles.input}

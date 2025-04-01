@@ -1700,10 +1700,10 @@
   dependencies:
     semver "^7.3.5"
 
-"@openfort/openfort-js@^0.8.34":
-  version "0.8.34"
-  resolved "https://registry.yarnpkg.com/@openfort/openfort-js/-/openfort-js-0.8.34.tgz#ed146e3caaf22ceb562d7abf176bd93b592fb699"
-  integrity sha512-agPwDmjb4tlsnbTNwtEyc9tEBmDN9q0czo1XnISyJG+Sr9Glh1QCZfUKPbLhNIHfAIv9bLHWTVSpQ7YOA/5laQ==
+"@openfort/openfort-js@^0.8.35":
+  version "0.8.35"
+  resolved "https://registry.yarnpkg.com/@openfort/openfort-js/-/openfort-js-0.8.35.tgz#a56a8261fd16b44ee7650e0e2e19078e395cc062"
+  integrity sha512-TAZQTqefRyBk6hkpYuNLvorA9t9k/wkTpLkOlWH0a0H+ISACp6os1jkKWfftUWj5uTE+kHG388U9cP2JsTqxJA==
   dependencies:
     "@ethersproject/hash" "^5.8.0"
     "@ethersproject/providers" "^5.8.0"

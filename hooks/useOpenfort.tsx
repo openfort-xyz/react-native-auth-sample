@@ -21,9 +21,12 @@ import {
 import { getEncryptionSession } from '../utils/getEncryptionSession';
 import { openfort } from '../utils/openfortConfig';
 
+type AuthProvider = 'email' | 'apple' | 'google' | null;
+
 interface ContextType {
   user: AuthPlayerResponse | null;
   authState: AuthStatus;
+  authProvider: AuthProvider;
 
   updateState: () => Promise<void>
   getEvmProvider: () => Provider;
@@ -36,7 +39,7 @@ interface ContextType {
     chainId: number
     password?: string,
   }) => Promise<{ error?: string }>;
-  auth: (platform: 'ios' | 'android',idToken: string) => Promise<AuthPlayerResponse>;
+  auth: (platform: 'ios' | 'android', idToken: string) => Promise<AuthPlayerResponse>;
 
   signMessage: (
     message: string,
@@ -77,7 +80,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
   const poller = useRef<NodeJS.Timeout | null>(null);
   const [user, setUser] = useState<AuthPlayerResponse | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
-
+  const [authProvider, setAuthProvider] = useState<AuthProvider>(null);
 
   const fetchUser = async () => {
     await new Promise((resolve) => setTimeout(resolve));
@@ -94,8 +97,6 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
     if (status === 'authenticated' || status === 'recovery')
       fetchUser();
   }, [status]);
-
-
 
   const updateState = async () => {
     try {
@@ -141,10 +142,15 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
   }, []);
 
   const auth = useCallback(
-    async (platform: 'ios'|'android',idToken: string): Promise<AuthPlayerResponse> => {
+    async (platform: 'ios'|'android', idToken: string): Promise<AuthPlayerResponse> => {
       try {
+        const provider = platform === 'ios' ? ThirdPartyOAuthProvider.APPLE_NATIVE : ThirdPartyOAuthProvider.GOOGLE_NATIVE;
+        
+        // Set the auth provider for recovery later
+        setAuthProvider(platform === 'ios' ? 'apple' : 'google');
+        
         return await openfort.authenticateWithThirdPartyProvider({
-          provider: platform === 'ios' ? ThirdPartyOAuthProvider.APPLE : ThirdPartyOAuthProvider.GOOGLE,
+          provider: provider,
           token: idToken,
           tokenType: TokenType.ID_TOKEN,
         });
@@ -183,6 +189,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
       setAuthLoading(true);
       await openfort.logout();
       await updateState();
+      setAuthProvider(null); // Reset auth provider
       setAuthLoading(false);
       return {};
     } catch (err) {
@@ -198,6 +205,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
         setAuthLoading(true);
         await new Promise((resolve) => setTimeout(resolve));
         await openfort.logInWithEmailPassword({ email, password });
+        setAuthProvider('email'); // Set auth provider
         await updateState();
         setAuthLoading(false);
         return {};
@@ -220,6 +228,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
         setAuthLoading(true);
         await new Promise((resolve) => setTimeout(resolve));
         await openfort.signUpWithEmailPassword({ email, password, options: name ? { data: { name } } : undefined });
+        setAuthProvider('email'); // Set auth provider
         await updateState();
         setAuthLoading(false);
         return {};
@@ -236,11 +245,39 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
       try {
         setAuthLoading(true);
         await new Promise((resolve) => setTimeout(resolve));
-        const shieldAuth: ShieldAuthentication = {
-          auth: ShieldAuthType.OPENFORT,
-          token: openfort.getAccessToken()!,
-          encryptionSession: await getEncryptionSession(),
-        };
+        
+        let shieldAuth: ShieldAuthentication;
+        
+        // Create shieldAuth based on the auth provider
+        if (authProvider === 'apple') {
+          // For Apple authentication
+          shieldAuth = {
+            auth: ShieldAuthType.OPENFORT,
+            authProvider: ThirdPartyOAuthProvider.APPLE_NATIVE,
+            tokenType: TokenType.ID_TOKEN,
+            token: openfort.getAccessToken()!,
+            encryptionSession: await getEncryptionSession(),
+          };
+        } else if (authProvider === 'google') {
+          // For Google authentication
+          shieldAuth = {
+            auth: ShieldAuthType.OPENFORT,
+            authProvider: ThirdPartyOAuthProvider.GOOGLE_NATIVE,
+            tokenType: TokenType.ID_TOKEN,
+            token: openfort.getAccessToken()!,
+            encryptionSession: await getEncryptionSession(),
+          };
+        } else {
+          // Default for email/password
+          const token = await openfort.getAccessToken()!;
+          const session = await getEncryptionSession();
+          shieldAuth = {
+            auth: ShieldAuthType.OPENFORT,
+            token: token,
+            encryptionSession: session,
+          };
+        }
+        
         if (method === 'automatic') {
           await openfort.configureEmbeddedSigner(chainId, shieldAuth);
           return {};
@@ -261,9 +298,8 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
         return { error: 'Error handling recovery with Openfort' };
       }
     },
-    []
+    [authProvider] // Include authProvider in the dependency array
   );
-
 
   const IframeRender = useMemo(() => {
     return <Iframe customUri={customUri} />
@@ -272,6 +308,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
   const contextValue: ContextType = {
     user,
     authState: authLoading ? 'loading' : status,
+    authProvider,
 
     updateState,
     logInWithEmailPassword,
