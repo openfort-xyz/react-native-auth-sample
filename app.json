@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "react-native-sample",
-    "slug": "react-native-sample",
+    "name": "openfort-expo-sample",
+    "slug": "openfort-expo-sample",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -11,14 +11,14 @@
     "ios": {
       "usesAppleSignIn": true,
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.react-native-sample"
+      "bundleIdentifier": "com.openfort.exposample"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.reactnativesample"
+      "package": "com.openfort.exposample"
     },
     "web": {
       "bundler": "metro",
@@ -36,11 +36,7 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-apple-authentication",
-      "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
-        }
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

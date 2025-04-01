@@ -144,9 +144,9 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
     async (platform: 'ios'|'android',idToken: string): Promise<AuthPlayerResponse> => {
       try {
         return await openfort.authenticateWithThirdPartyProvider({
-          provider: ThirdPartyOAuthProvider.SUPABASE,
+          provider: platform === 'ios' ? ThirdPartyOAuthProvider.APPLE : ThirdPartyOAuthProvider.GOOGLE,
           token: idToken,
-          tokenType: TokenType.CUSTOM_TOKEN,
+          tokenType: TokenType.ID_TOKEN,
         });
       } catch (err) {
         console.error('Error authenticating:', err);
