@@ -1,7 +1,7 @@
 
-# Openfort Auth React Native
+# Openfort Invisible Wallet with  React Native
 
-Check the full guide [in the docs](https://www.openfort.xyz/docs/guides/javascript/react-native)
+Check the full guide [in the docs](https://www.openfort.io/docs/products/embedded-wallet/react-native)
 
 ## Notes
 Because we are using `mmkv` storage, expo-go will not work. To run your app use `expo run:ios` or `expo run:android`.
@@ -13,7 +13,7 @@ Because we are using `mmkv` storage, expo-go will not work. To run your app use 
 git clone https://github.com/openfort-xyz/react-native-auth-sample.git
 ```
 
-2. Install the necessary dependencies (including [Openfort Auth](https://www.npmjs.com/package/@openfort/openfort-js)) with `npm`.
+2. Install the necessary dependencies (including [Openfort JS](https://www.npmjs.com/package/@openfort/openfort-js)) with `npm`.
 ```sh
 npm i 
 ```
@@ -21,7 +21,7 @@ npm i
 3. Clone the (sample backend repository)[https://github.com/openfort-xyz/auth-sample-backend]
     Set up the backend sample and set the port to 3110.
 
-4. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.xyz/docs/api-keys).
+4. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.io/docs/configuration/api-keys).
 ```sh
 # In your terminal, create .env.local from .env.example
 cp .env.example .env.local
@@ -80,11 +80,11 @@ const openfort = new Openfort({
   }
 });
 ```
-Check out the documentation [here](https://www.openfort.xyz/docs/guides/getting-started#4-import-openfort-into-your-app)
+Check out the documentation [here](https://www.openfort.io/docs/products/embedded-wallet/javascript/quickstart#4-import-openfort-into-your-app)
 
 ### Render secure WebView
 
-Openfort uses a `WebView` (from `react-native-webview`) to operate as a secure environment, managing the private key and executing wallet operations. [Learn more](https://www.openfort.xyz/docs/security#embedded-self-custodial-signer).
+Openfort uses a `WebView` (from `react-native-webview`) to operate as a secure environment, managing the private key and executing wallet operations. [Learn more](https://www.openfort.io/docs/development/security#embedded-self-custodial-signer).
 
 This WebView needs to always be displayed, it is recommended to put it on top of your app. It is wrapped inside a view with `flex: 0`
 
