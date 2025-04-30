@@ -10,6 +10,7 @@ import { useOpenfort } from '../../hooks/useOpenfort';
 // 2. Add "expo-apple-authentication" to plugins in app.json
 // 3. Uncomment the import statement below
 // Note: You may need to delete the iOS build and re-run it to see the changes
+// Note that you need a valid Apple Developer account with the paid Apple Developer Program to use Apple Sign In.
 
 // import * as AppleAuthentication from "expo-apple-authentication";
 const AppleAuthentication = null as any;
