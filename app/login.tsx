@@ -1,15 +1,15 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useOpenfort } from '../hooks/useOpenfort';
 import { commonStyles } from '../styles/styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Auth } from '../components/Auth.native';
+import { Ionicons } from '@expo/vector-icons';
+import Header from '../components/Header';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showTraditionalLogin, setShowTraditionalLogin] = useState(false);
   const { logInWithEmailPassword } = useOpenfort();
   const router = useRouter();
 
@@ -18,12 +18,12 @@ const Login = () => {
       Alert.alert('Error', 'Email cannot be empty');
       return false;
     }
-    
+
     if (!password.trim()) {
       Alert.alert('Error', 'Password cannot be empty');
       return false;
     }
-    
+
     return true;
   };
 
@@ -31,15 +31,11 @@ const Login = () => {
     if (!validateFields()) {
       return;
     }
-    
+
     const result = await logInWithEmailPassword(email, password);
     if (!result.error) {
       router.replace("/main");
     }
-  };
-
-  const handleAuthCancellation = () => {
-    setShowTraditionalLogin(true);
   };
 
   const handleDevLogin = () => {
@@ -53,61 +49,38 @@ const Login = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <Text style={commonStyles.title}>Login</Text>
-        
-        {!showTraditionalLogin ? (
-          <View style={styles.nativeAuthContainer}>
-            <Text style={styles.subtitle}>Sign in with:</Text>
-            <Auth onDismiss={handleAuthCancellation} type="login" />
-            <Button 
-              title="Use email & password instead" 
-              onPress={handleAuthCancellation} 
-            />
-          </View>
-        ) : (
-          <View style={styles.traditionalAuthContainer}>
-            <TextInput
-              style={commonStyles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={commonStyles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+    <>
+      <Header title="Login" onBackPress={() => router.replace("/auth")}  />
+      <View style={styles.traditionalAuthContainer}>
+        <TextInput
+          style={commonStyles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={commonStyles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-            <Button title="Login" onPress={handleLogin} />
-            <Text style={{ marginTop: 10 }}>or</Text>
-            <Button title="Register" onPress={() => router.push("/register")} />
-            
-            <View style={{ marginTop: 20 }}>
-              <Button 
-                title="Back to native login" 
-                onPress={() => setShowTraditionalLogin(false)} 
-              />
-            </View>
-          </View>
-        )}
-
-        {showTraditionalLogin && (
-          <View style={{ marginTop: "auto" }}>
-            <Button 
-              title="set dev" 
-              color={"#ddd"} 
-              onPress={handleDevLogin} 
-            />
-          </View>
-        )}
+        <Button title="Login" onPress={handleLogin} />
+        <Text style={{ marginTop: 10 }}>or</Text>
+        <Button title="Register" onPress={() => router.push("/register")} />
       </View>
-    </SafeAreaView>
+
+      <View style={{ marginTop: "auto" }}>
+        <Button
+          title="set dev"
+          color={"#ddd"}
+          onPress={handleDevLogin}
+        />
+      </View>
+    </>
   );
 };
 

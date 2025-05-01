@@ -14,7 +14,7 @@ function RootLayout() {
 
   useEffect(() => {
     if (authState === "unauthenticated") {
-      router.push("/login");
+      router.push("/auth");
     }
   }, [authState]);
 

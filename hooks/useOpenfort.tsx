@@ -39,7 +39,10 @@ interface ContextType {
     chainId: number
     password?: string,
   }) => Promise<{ error?: string }>;
-  auth: (platform: 'ios' | 'android', idToken: string) => Promise<AuthPlayerResponse>;
+  authenticateWithProvider: (
+    provider: ThirdPartyOAuthProvider.APPLE_NATIVE | ThirdPartyOAuthProvider.GOOGLE_NATIVE,
+    idToken: string
+  ) => Promise<AuthPlayerResponse>;
 
   signMessage: (
     message: string,
@@ -142,15 +145,13 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
   }, []);
 
   const auth = useCallback(
-    async (platform: 'ios'|'android', idToken: string): Promise<AuthPlayerResponse> => {
+    async (provider: ThirdPartyOAuthProvider.APPLE_NATIVE | ThirdPartyOAuthProvider.GOOGLE_NATIVE, idToken: string): Promise<AuthPlayerResponse> => {
       try {
-        const provider = platform === 'ios' ? ThirdPartyOAuthProvider.APPLE_NATIVE : ThirdPartyOAuthProvider.GOOGLE_NATIVE;
-        
         // Set the auth provider for recovery later
-        setAuthProvider(platform === 'ios' ? 'apple' : 'google');
-        
+        setAuthProvider(provider === ThirdPartyOAuthProvider.APPLE_NATIVE ? 'apple' : 'google');
+
         return await openfort.authenticateWithThirdPartyProvider({
-          provider: provider,
+          provider,
           token: idToken,
           tokenType: TokenType.ID_TOKEN,
         });
@@ -245,9 +246,9 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
       try {
         setAuthLoading(true);
         await new Promise((resolve) => setTimeout(resolve));
-        
+
         let shieldAuth: ShieldAuthentication;
-        
+
         // Create shieldAuth based on the auth provider
         if (authProvider === 'apple') {
           // For Apple authentication
@@ -277,7 +278,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
             encryptionSession: session,
           };
         }
-        
+
         if (method === 'automatic') {
           await openfort.configureEmbeddedSigner(chainId, shieldAuth);
           return {};
@@ -313,7 +314,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
     updateState,
     logInWithEmailPassword,
     signUpWithEmailPassword,
-    auth,
+    authenticateWithProvider: auth,
     getEvmProvider,
     handleRecovery,
     signMessage,
