@@ -1,5 +1,6 @@
 import {
   EmbeddedState,
+  OAuthProvider,
   ShieldAuthType,
   ThirdPartyOAuthProvider,
   TokenType,
@@ -39,10 +40,10 @@ interface ContextType {
     chainId: number
     password?: string,
   }) => Promise<{ error?: string }>;
-  authenticateWithProvider: (
-    provider: ThirdPartyOAuthProvider.APPLE_NATIVE | ThirdPartyOAuthProvider.GOOGLE_NATIVE,
+  loginWithIdToken: (
+    provider: OAuthProvider.APPLE | OAuthProvider.GOOGLE,
     idToken: string
-  ) => Promise<AuthPlayerResponse>;
+  ) => Promise<string>;
 
   signMessage: (
     message: string,
@@ -145,16 +146,13 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
   }, []);
 
   const auth = useCallback(
-    async (provider: ThirdPartyOAuthProvider.APPLE_NATIVE | ThirdPartyOAuthProvider.GOOGLE_NATIVE, idToken: string): Promise<AuthPlayerResponse> => {
+    async (provider: OAuthProvider.APPLE | OAuthProvider.GOOGLE, idToken: string): Promise<string> => {
       try {
-        // Set the auth provider for recovery later
-        setAuthProvider(provider === ThirdPartyOAuthProvider.APPLE_NATIVE ? 'apple' : 'google');
-
-        return await openfort.authenticateWithThirdPartyProvider({
+        const response = await openfort.loginWithIdToken({
           provider,
           token: idToken,
-          tokenType: TokenType.ID_TOKEN,
         });
+        return response.player.id
       } catch (err) {
         console.error('Error authenticating:', err);
         throw err;
@@ -247,37 +245,14 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
         setAuthLoading(true);
         await new Promise((resolve) => setTimeout(resolve));
 
-        let shieldAuth: ShieldAuthentication;
+        const token = await openfort.getAccessToken()!;
+        const session = await getEncryptionSession();
+        const shieldAuth = {
+          auth: ShieldAuthType.OPENFORT,
+          token: token,
+          encryptionSession: session,
+        };
 
-        // Create shieldAuth based on the auth provider
-        if (authProvider === 'apple') {
-          // For Apple authentication
-          shieldAuth = {
-            auth: ShieldAuthType.OPENFORT,
-            authProvider: ThirdPartyOAuthProvider.APPLE_NATIVE,
-            tokenType: TokenType.ID_TOKEN,
-            token: openfort.getAccessToken()!,
-            encryptionSession: await getEncryptionSession(),
-          };
-        } else if (authProvider === 'google') {
-          // For Google authentication
-          shieldAuth = {
-            auth: ShieldAuthType.OPENFORT,
-            authProvider: ThirdPartyOAuthProvider.GOOGLE_NATIVE,
-            tokenType: TokenType.ID_TOKEN,
-            token: openfort.getAccessToken()!,
-            encryptionSession: await getEncryptionSession(),
-          };
-        } else {
-          // Default for email/password
-          const token = await openfort.getAccessToken()!;
-          const session = await getEncryptionSession();
-          shieldAuth = {
-            auth: ShieldAuthType.OPENFORT,
-            token: token,
-            encryptionSession: session,
-          };
-        }
 
         if (method === 'automatic') {
           await openfort.configureEmbeddedSigner(chainId, shieldAuth);
@@ -314,7 +289,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
     updateState,
     logInWithEmailPassword,
     signUpWithEmailPassword,
-    authenticateWithProvider: auth,
+    loginWithIdToken: auth,
     getEvmProvider,
     handleRecovery,
     signMessage,

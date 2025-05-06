@@ -1,4 +1,4 @@
-import { ThirdPartyOAuthProvider } from '@openfort/openfort-js';
+import { OAuthProvider } from '@openfort/openfort-js';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Text, View } from "react-native";
@@ -17,7 +17,7 @@ const AppleAuthentication = null as any;
 
 export function AppleAuth() {
   const router = useRouter();
-  const { authenticateWithProvider } = useOpenfort();
+  const { loginWithIdToken } = useOpenfort();
 
   if (!AppleAuthentication)
     return (
@@ -55,8 +55,8 @@ export function AppleAuth() {
           if (credential.identityToken) {
             try {
               // Pass the platform as 'ios' to indicate Apple authentication
-              const data = await authenticateWithProvider(ThirdPartyOAuthProvider.APPLE_NATIVE, credential.identityToken);
-              console.log("Authentication successful:", JSON.stringify(data, null, 2));
+              const data = await loginWithIdToken(OAuthProvider.APPLE, credential.identityToken);
+              console.log("Authentication successful:", data);
 
               // Ensure we navigate after a successful authentication
               // Wrap in setTimeout to ensure the auth state is updated before navigation

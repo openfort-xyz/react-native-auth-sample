@@ -1,4 +1,4 @@
-import { ThirdPartyOAuthProvider } from '@openfort/openfort-js';
+import { OAuthProvider, ThirdPartyOAuthProvider } from '@openfort/openfort-js';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Text, View } from "react-native";
@@ -16,7 +16,7 @@ const GoogleAuthentication = null as any;
 
 export function GoogleAuth() {
   const router = useRouter();
-  const { authenticateWithProvider } = useOpenfort();
+  const { loginWithIdToken } = useOpenfort();
 
   if (!GoogleAuthentication)
     return (
@@ -44,8 +44,8 @@ export function GoogleAuth() {
           const userInfo = await GoogleAuthentication.GoogleSignin.signIn()
           console.log("Google Sign-In successful:", JSON.stringify(userInfo, null, 2));
           if (userInfo.data?.idToken) {
-            const data = await authenticateWithProvider(ThirdPartyOAuthProvider.GOOGLE_NATIVE, userInfo.data.idToken);
-            console.log("Authentication successful:", JSON.stringify(data, null, 2));
+            const data = await loginWithIdToken(OAuthProvider.GOOGLE, userInfo.data.idToken);
+            console.log("Authentication successful:", data);
 
             setTimeout(() => {
               console.log("Navigating to main screen");
