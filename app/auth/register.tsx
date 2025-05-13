@@ -1,10 +1,10 @@
 import { Text, View, StyleSheet, Button, TextInput, Alert } from "react-native";
-import { useOpenfort } from "../hooks/useOpenfort";
+import { useOpenfort } from "../../hooks/useOpenfort";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import { commonStyles } from "../styles/styles";
+import { commonStyles } from "../../styles/styles";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Header from "../components/Header";
+import Header from "../../components/Header";
 
 export default function Register() {
   const { signUpWithEmailPassword } = useOpenfort();
@@ -83,7 +83,7 @@ export default function Register() {
         />
         <Button title="Register" onPress={handleSignUp} />
         <Text style={{ marginTop: 10 }}>or</Text>
-        <Button title="Login" onPress={() => router.push("/login")} />
+        <Button title="Login" onPress={() => router.push("/auth/login")} />
       </View>
       <View style={{ marginTop: "auto" }} />
     </>

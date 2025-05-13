@@ -7,4 +7,7 @@ export const openfort = new Openfort({
   shieldConfiguration: {
     shieldPublishableKey: process.env.EXPO_PUBLIC_SHIELD_API_KEY!,
   },
+  overrides: {
+    iframeUrl: process.env.EXPO_PUBLIC_IFRAME_URL, // optional
+  }
 });

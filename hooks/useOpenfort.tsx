@@ -2,14 +2,10 @@ import {
   EmbeddedState,
   OAuthProvider,
   ShieldAuthType,
-  ThirdPartyOAuthProvider,
-  TokenType,
   type AuthPlayerResponse,
-  type Provider,
-  type ShieldAuthentication
+  type Provider
 } from '@openfort/openfort-js';
 import { Iframe } from '@openfort/react-native';
-import type React from 'react';
 import {
   createContext,
   useCallback,
@@ -72,16 +68,13 @@ export type AuthStatus =
   | "authenticated"    // User has logged in successfully
   | "loading";         // Loading state
 
-type OpenfortProps = {
-  customUri?: string;
-}
+type OpenfortProps = {}
 
 export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> = ({
-  customUri,
   children,
 }) => {
   const [authLoading, setAuthLoading] = useState(false);
-  const poller = useRef<NodeJS.Timeout | null>(null);
+  const poller = useRef<ReturnType<typeof setInterval> | null>(null);
   const [user, setUser] = useState<AuthPlayerResponse | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [authProvider, setAuthProvider] = useState<AuthProvider>(null);
@@ -277,9 +270,16 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
     [authProvider] // Include authProvider in the dependency array
   );
 
+  const debug = false;
   const IframeRender = useMemo(() => {
-    return <Iframe customUri={customUri} />
-  }, [customUri])
+    return (
+      <Iframe
+        customUri={process.env.EXPO_PUBLIC_IFRAME_URL}
+        debug={debug}
+        debugVisible={debug}
+      />
+    )
+  }, [])
 
   const contextValue: ContextType = {
     user,

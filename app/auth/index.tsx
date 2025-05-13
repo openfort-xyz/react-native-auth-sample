@@ -1,8 +1,8 @@
 import { useRouter } from "expo-router";
 import { Button, Platform, Text, View } from "react-native";
-import { AppleAuth } from "../components/authentication/AppleAuth";
-import { GoogleAuth } from "../components/authentication/GoogleAuth";
-import { commonStyles } from "../styles/styles";
+import { AppleAuth } from "../../components/authentication/AppleAuth";
+import { GoogleAuth } from "../../components/authentication/GoogleAuth";
+import { commonStyles } from "../../styles/styles";
 
 const Auth = () => {
   const router = useRouter();
@@ -24,7 +24,7 @@ const Auth = () => {
 
       <Button
         title="Email & Password"
-        onPress={() => router.push("/login")}
+        onPress={() => router.push("/auth/login")}
       />
 
       <GoogleAuth />
