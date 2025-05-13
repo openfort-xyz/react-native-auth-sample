@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useOpenfort } from '../hooks/useOpenfort';
-import { commonStyles } from '../styles/styles';
+import { useOpenfort } from '../../hooks/useOpenfort';
+import { commonStyles } from '../../styles/styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Header from '../components/Header';
+import Header from '../../components/Header';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -70,7 +70,7 @@ const Login = () => {
 
         <Button title="Login" onPress={handleLogin} />
         <Text style={{ marginTop: 10 }}>or</Text>
-        <Button title="Register" onPress={() => router.push("/register")} />
+        <Button title="Register" onPress={() => router.push("/auth/register")} />
       </View>
 
       <View style={{ marginTop: "auto" }}>

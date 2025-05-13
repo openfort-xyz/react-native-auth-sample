@@ -13,17 +13,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ConsoleProvider>
-        <OpenfortProvider customUri={process.env.EXPO_PUBLIC_IFRAME_URL}>
+        <OpenfortProvider>
           <Redirect href="/main" />
-          <SafeAreaView style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-            gap: 10,
-          }}>
-            <Slot />
-          </SafeAreaView>
+          <Slot />
         </OpenfortProvider>
       </ConsoleProvider>
     </SafeAreaProvider>
