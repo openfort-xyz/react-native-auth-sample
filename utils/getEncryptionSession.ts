@@ -3,8 +3,8 @@ export const getEncryptionSession = async (): Promise<string> => {
   try {
     // You can find the source code for the backend in the following link:
     // https://github.com/openfort-xyz/auth-sample-backend
-    const api = "http://localhost:3110/api/protected-create-encryption-session";
-    const response = await fetch(api, {
+    const api = "/api/protected-create-encryption-session";
+    const response = await fetch(process.env.EXPO_PUBLIC_API_URL! + api, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

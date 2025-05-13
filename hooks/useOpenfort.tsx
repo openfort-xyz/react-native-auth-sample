@@ -6,7 +6,6 @@ import {
   type Provider
 } from '@openfort/openfort-js';
 import { Iframe } from '@openfort/react-native';
-import type React from 'react';
 import {
   createContext,
   useCallback,
@@ -75,7 +74,7 @@ export const OpenfortProvider: React.FC<React.PropsWithChildren<OpenfortProps>> 
   children,
 }) => {
   const [authLoading, setAuthLoading] = useState(false);
-  const poller = useRef<NodeJS.Timeout | null>(null);
+  const poller = useRef<ReturnType<typeof setInterval> | null>(null);
   const [user, setUser] = useState<AuthPlayerResponse | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [authProvider, setAuthProvider] = useState<AuthProvider>(null);
