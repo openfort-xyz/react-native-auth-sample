@@ -1,27 +1,17 @@
 {
   "expo": {
-    "name": "@openfort/expo-sample",
-    "slug": "expo-sample",
+    "name": "openfort-expo-sample",
+    "slug": "openfort-expo-sample",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "newArchEnabled": true,
     "ios": {
       "usesAppleSignIn": true,
       "supportsTablet": true,
-      "bundleIdentifier": "com.openfort.exposample",
-      "associatedDomains": ["webcredentials:<your-associated-domain>"],
-      "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        }
-      }
+      "bundleIdentifier": "com.openfort.exposample"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,22 +20,22 @@
       },
       "package": "com.openfort.exposample"
     },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
-      "expo-apple-authentication",
       [
-        "expo-build-properties",
+        "expo-splash-screen",
         {
-          "ios": {
-            "deploymentTarget": "17.5"
-          },
-          "android": {
-            "compileSdkVersion": 35
-          }
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
         }
-      ],
-      "expo-font"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

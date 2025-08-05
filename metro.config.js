@@ -1,22 +1,15 @@
-// Learn more https://docs.expo.io/guides/customizing-metro
-const { getDefaultConfig } = require("expo/metro-config");
+const { getDefaultConfig } = require('expo/metro-config');
 
-/** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname);
+// sample metro.config.js
+module.exports = (() => {
+  const config = getDefaultConfig(__dirname);
 
-const resolveRequestWithPackageExports = (context, moduleName, platform) => {
-  // Package exports in `jose` are incorrect, so we need to force the browser version
-  if (moduleName === "jose") {
-    const ctx = {
-      ...context,
-      unstable_conditionNames: ["browser"],
-    };
-    return ctx.resolveRequest(ctx, moduleName, platform);
-  }
+  // Add shims for Node.js modules like crypto and stream
+  config.resolver.extraNodeModules = {
+    crypto: require.resolve('react-native-crypto'),
+    stream: require.resolve('stream-browserify'),
+    buffer: require.resolve('buffer'),
+  };
 
-  return context.resolveRequest(context, moduleName, platform);
-};
-
-config.resolver.resolveRequest = resolveRequestWithPackageExports;
-
-module.exports = config;
+  return config;
+})();

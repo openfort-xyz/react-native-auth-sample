@@ -2,10 +2,14 @@ import {
   EmbeddedState,
   OAuthProvider,
   ShieldAuthType,
+  ThirdPartyOAuthProvider,
+  TokenType,
   type AuthPlayerResponse,
-  type Provider
+  type Provider,
+  type ShieldAuthentication
 } from '@openfort/openfort-js';
 import { Iframe } from '@openfort/react-native';
+import type React from 'react';
 import {
   createContext,
   useCallback,
