@@ -1,31 +1,26 @@
-// Apply polyfills for openfort-js
-import "@openfort/react-native/polyfills";
-
-import { Redirect, Slot } from "expo-router";
+import { Stack } from "expo-router";
 import React from "react";
-import { ConsoleProvider } from "../hooks/useConsole";
-import { OpenfortProvider } from "../hooks/useOpenfort";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { Text, View } from "react-native";
-
+import { OpenfortProvider, RecoveryMethod } from "@openfort/react-native"
+import { baseSepolia } from "viem/chains";
 export default function RootLayout() {
 
   return (
-    <SafeAreaProvider>
-      <ConsoleProvider>
-        <OpenfortProvider customUri={process.env.EXPO_PUBLIC_IFRAME_URL}>
-          <Redirect href="/main" />
-          <SafeAreaView style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-            gap: 10,
-          }}>
-            <Slot />
-          </SafeAreaView>
-        </OpenfortProvider>
-      </ConsoleProvider>
-    </SafeAreaProvider>
+    <OpenfortProvider 
+      publishableKey="pk_test_505bc088-905e-5a43-b60b-4c37ed1f887a"
+      embeddedWallet={{
+        recoveryMethod: RecoveryMethod.PASSWORD,
+        debug: true,
+        ethereumProviderPolicyId: "pol_e7491b89-528e-40bb-b3c2-9d40afa4fefc",
+        shieldPublishableKey: "a4b75269-65e7-49c4-a600-6b5d9d6eec66",
+        shieldEncryptionKey: "d42724b6-b737-4fc7-a864-4c9ed13bbb05",
+      }}
+      supportedChains={[
+        baseSepolia
+      ]}
+      >
+      <Stack>
+        <Stack.Screen name="index" />
+      </Stack>
+    </OpenfortProvider>
   );
 }
