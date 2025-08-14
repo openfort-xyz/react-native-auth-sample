@@ -1,5 +1,5 @@
 
-# Openfort Invisible Wallet with  React Native
+# Embedded Wallet with React Native (Sample)
 
 Check the full guide [in the docs](https://www.openfort.io/docs/products/embedded-wallet/react-native)
 
