@@ -1,23 +1,43 @@
+import { OpenfortProvider, RecoveryMethod } from "@openfort/react-native";
 import { Stack } from "expo-router";
 import React from "react";
-import { OpenfortProvider, RecoveryMethod } from "@openfort/react-native"
-import { baseSepolia } from "viem/chains";
+// import { baseSepolia } from "viem/chains";
 export default function RootLayout() {
 
   return (
-    <OpenfortProvider 
-      publishableKey="pk_test_505bc088-905e-5a43-b60b-4c37ed1f887a"
-      embeddedWallet={{
+    <OpenfortProvider
+      publishableKey="pk_test_af122dce-279e-5d50-ada1-bdcbf2fc671c"
+      walletConfig={{
         recoveryMethod: RecoveryMethod.PASSWORD,
         debug: true,
-        ethereumProviderPolicyId: "pol_e7491b89-528e-40bb-b3c2-9d40afa4fefc",
-        shieldPublishableKey: "a4b75269-65e7-49c4-a600-6b5d9d6eec66",
-        shieldEncryptionKey: "d42724b6-b737-4fc7-a864-4c9ed13bbb05",
+        ethereumProviderPolicyId: "no",
+        shieldPublishableKey: "8415deef-9fd5-4b6a-8010-889aa513fbec",
+        shieldEncryptionKey: "AjpBnCCvakt79w1QpKO2w6mPwHa3fFT/z2xBeRb2YLvA",
+        // createEncryptedSessionEndpoint: "https://your-api.com/create-encrypted-session",
       }}
       supportedChains={[
-        baseSepolia
+        {
+          id: 84532,
+          name: 'Base Sepolia',
+          nativeCurrency: {
+            name: 'Base Sepolia Ether',
+            symbol: 'ETH',
+            decimals: 18
+          },
+          rpcUrls: { default: { http: ['https://sepolia.base.org'] } },
+        },
+        {
+          id: 11155111,
+          name: 'Sepolia',
+          nativeCurrency: {
+            name: 'Sepolia Ether',
+            symbol: 'ETH',
+            decimals: 18
+          },
+          rpcUrls: { default: { http: ['https://ethereum-sepolia-rpc.publicnode.com'] } },
+        },
       ]}
-      >
+    >
       <Stack>
         <Stack.Screen name="index" />
       </Stack>

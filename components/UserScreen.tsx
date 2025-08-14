@@ -1,51 +1,52 @@
-import React, { useState, useCallback } from "react";
-import { Text, TextInput, View, Button, ScrollView } from "react-native";
-import { OAuthProvider, useEmbeddedEthereumWallet, useLinkWithOAuth, useOpenfort, useRecoverEmbeddedWallet, ConnectedEmbeddedEthereumWallet } from "@openfort/react-native";
+import { OAuthProvider, useOAuth, useOpenfort, UserWallet, useUser, useWallets } from "@openfort/react-native";
+import React, { useCallback, useState } from "react";
+import { Button, ScrollView, Text, View } from "react-native";
 
 
 export const UserScreen = () => {
-  const [chainId, setChainId] = useState("11155111");
-  const [signedMessages, setSignedMessages] = useState<string[]>([]);
+  const [chainId, setChainId] = useState("84532");
+  const [isSwitchingChain, setIsSwitchingChain] = useState(false);
 
-  const { logout, user, isReady, error } = useOpenfort();
-  console.log('isReady',isReady)
-  console.log('error',error)
-  const oauth = useLinkWithOAuth();
-  const { wallets, create, status, account } = useEmbeddedEthereumWallet({
-     onCreateWalletError: (error) => {
-      console.error("Error creating wallet:", error);
-    },
-    onCreateWalletSuccess: (wallet) => {
-      console.log("Wallet created successfully:", wallet);
-    },
-  });
-  const { recover } = useRecoverEmbeddedWallet();
-  console.log("Embedded Wallets:", wallets, "Status:", status);
+  // const { signOut } = useSignOut();
+  const { user } = useUser();
+  const { isReady, error, logout: signOut } = useOpenfort();
+  console.log('isReady', isReady)
+  console.log('error', error)
+  const { link, isLoading: isOAuthLoading } = useOAuth();
+
+  const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets();
+
+  // console.log("Embedded Wallets:", wallets, "Status:", status);
 
   const signMessage = useCallback(
-    async (wallet: ConnectedEmbeddedEthereumWallet) => {
+    async () => {
       try {
-        console.log("Signing message with wallet:", wallet);
-        const provider = await wallet.getProvider();
+        if (!activeWallet) {
+          alert("No active wallet selected");
+          return;
+        }
+        console.log("Signing message with wallet:", activeWallet);
+        const provider = await activeWallet.getProvider();
         console.log("Provider:", provider);
         const message = await provider.request({
           method: "personal_sign",
-          params: [`0x0${Date.now()}`, account?.address],
+          params: [`0x0${Date.now()}`, activeWallet?.address],
         });
         console.log("Message signed:", message);
         if (message) {
-          setSignedMessages((prev) => prev.concat(message));
+          alert("Message signed successfully: " + message);
         }
       } catch (e) {
         console.error(e);
       }
     },
-    [account?.address]
+    [activeWallet]
   );
 
   const switchChain = useCallback(
-    async (wallet: ConnectedEmbeddedEthereumWallet, id: string) => {
+    async (wallet: UserWallet, id: string) => {
       try {
+        setIsSwitchingChain(true);
         console.log("Signing message with wallet:", wallet);
         const provider = await wallet.getProvider();
         console.log("Provider:", provider);
@@ -57,8 +58,9 @@ export const UserScreen = () => {
       } catch (e) {
         console.error(e);
       }
+      setIsSwitchingChain(false);
     },
-    [account?.address]
+    []
   );
 
   if (!user) {
@@ -66,16 +68,16 @@ export const UserScreen = () => {
   }
 
   return (
-    <View>
+    <ScrollView >
       <View style={{ display: "flex", flexDirection: "column", margin: 10 }}>
         {(["twitter", "google", "discord", "apple"] as const).map((provider) => (
           <View key={provider}>
             <Button
               title={`Link ${provider}`}
-              disabled={oauth.state.status === "loading"}
-              onPress={async() => {
+              disabled={isOAuthLoading}
+              onPress={async () => {
                 try {
-                await oauth.link({ provider: provider as OAuthProvider })
+                  await link({ provider: provider as OAuthProvider })
                 } catch (e) {
                   console.error("Error linking account:", e);
                 }
@@ -85,7 +87,7 @@ export const UserScreen = () => {
         ))}
       </View>
 
-      <ScrollView style={{ borderColor: "rgba(0,0,0,0.1)", borderWidth: 1 }}>
+      <View style={{ borderColor: "rgba(0,0,0,0.1)", borderWidth: 1 }}>
         <View
           style={{
             padding: 20,
@@ -117,33 +119,68 @@ export const UserScreen = () => {
                 ))}
               </View>
             ) : null}
-          </View>
- */}
+          </View> */}
+
           <View>
-            <Text style={{ fontWeight: "bold" }}>{`Embedded Wallet Status: ${status}`}</Text>
-            {account?.address && (
+            {/* <Text style={{ fontWeight: "bold" }}>{`Embedded Wallet: ${activeWallet?.address || "disconnected"}`}</Text> */}
+            {activeWallet?.address && (
               <>
-                <Text style={{ fontWeight: "bold" }}>Embedded Wallet</Text>
-                <Text>{account?.address}</Text>
+                <Text style={{ fontWeight: "bold" }}>Current Wallet</Text>
+                <Text>{activeWallet?.address || "disconnected"}</Text>
               </>
             )}
 
-            <Button title="Create Wallet" onPress={() => create()} />
-            <Button title="Recover Wallet" onPress={() => recover({recoveryPassword:'caca'})} />
+            <Text style={{ fontWeight: "bold", marginTop: 20, fontSize: 16 }}>Available Wallets</Text>
+            {
+              wallets
+                .map((w, i) => (
+                  <View key={w.address + i} style={{ display: "flex", flexDirection: "row", gap: 5, alignItems: "center" }}>
+                    <Button
+                      title={`${w.address.slice(0, 6)}...${w.address.slice(-4)}`}
+                      disabled={activeWallet?.address === w.address}
+                      onPress={() => setActiveWallet({
+                        address: w.address,
+                        chainId: Number(chainId),
+                        onSuccess: () => {
+                          alert("Active wallet set to: " + w.address);
+                        },
+                        onError: (error) => {
+                          alert("Error setting active wallet: " + error.message);
+                        }
+                      })}
+                    />
 
+                    {
+                      w.isConnecting && (
+                        <Text style={{ color: "rgba(0,0,0,0.5)", fontSize: 12, fontStyle: "italic" }}>
+                          Connecting...
+                        </Text>
+                      )
+                    }
+                  </View>
+                ))
+            }
+            <Button
+              title={isCreating ? "Creating Wallet..." : "Create Wallet"}
+              disabled={isCreating}
+              onPress={() => createWallet({
+                onError: (error) => {
+                  alert("Error creating wallet: " + error.message);
+                },
+                onSuccess: ({ wallet }) => {
+                  alert("Wallet created successfully: " + wallet?.address);
+                },
+              })} />
 
             <>
-              <Text>Chain ID to set to:</Text>
-              <TextInput
-                value={chainId}
-                onChangeText={setChainId}
-                placeholder="Chain Id"
-              />
+              <Text>Chain ID: {isSwitchingChain ? "Switching..." : chainId}</Text>
               <Button
-                title="Switch Chain"
-                onPress={async () =>
-                  switchChain(wallets[0], chainId)
-                }
+                title={`Switch to ${chainId === "11155111" ? "84532" : "11155111"}`}
+                onPress={async () => {
+                  const chainToSwitch = chainId === "11155111" ? "84532" : "11155111";
+                  activeWallet && switchChain(activeWallet, chainToSwitch)
+                  setChainId(chainToSwitch)
+                }}
               />
             </>
           </View>
@@ -151,34 +188,12 @@ export const UserScreen = () => {
           <View style={{ display: "flex", flexDirection: "column" }}>
             <Button
               title="Sign Message"
-              onPress={async () => signMessage(wallets[0])}
+              onPress={async () => signMessage()}
             />
-
-            <Text>Messages signed:</Text>
-            {signedMessages.map((m) => (
-              <React.Fragment key={m}>
-                <Text
-                  style={{
-                    color: "rgba(0,0,0,0.5)",
-                    fontSize: 12,
-                    fontStyle: "italic",
-                  }}
-                >
-                  {m}
-                </Text>
-                <View
-                  style={{
-                    marginVertical: 5,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "rgba(0,0,0,0.2)",
-                  }}
-                />
-              </React.Fragment>
-            ))}
           </View>
-          <Button title="Logout" onPress={logout} />
+          <Button title="Logout" onPress={signOut} />
         </View>
-      </ScrollView>
-    </View>
+      </View >
+    </ScrollView >
   );
 };

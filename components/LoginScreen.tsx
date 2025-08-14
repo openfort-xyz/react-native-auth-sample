@@ -1,21 +1,9 @@
+import { OAuthProvider, useGuestAuth, useOAuth } from "@openfort/react-native";
 import { Button, Text, View } from "react-native";
-import Constants from "expo-constants";
-import { useState } from "react";
-import * as Application from "expo-application";
-import { OAuthProvider, useCreateGuestAccount, useLoginWithOAuth } from "@openfort/react-native";
 
 export default function LoginScreen() {
-  const [error, setError] = useState("");
-  const { create} = useCreateGuestAccount({
-    onError: (err) => {
-      console.log("Error creating guest account:", err);
-      setError(err.message);
-    },
-    onSuccess: (user) => {
-      console.log("Success creating guest account: ", user);
-    },
-  })
-  const { login } = useLoginWithOAuth();
+  const { signUpGuest } = useGuestAuth()
+  const { initOAuth, error } = useOAuth();
 
   return (
     <View
@@ -27,17 +15,18 @@ export default function LoginScreen() {
         marginHorizontal: 10,
       }}
     >
-      <Text style={{ fontSize: 10 }}>{Application.applicationId}</Text>
+      <Text style={{ fontSize: 20, fontWeight: "bold" }}>Openfort Expo Example</Text>
+      {/* <Text style={{ fontSize: 10 }}>{Application.applicationId}</Text>
       <Text style={{ fontSize: 10 }}>
         {Application.applicationId === "host.exp.Exponent"
           ? "exp"
           : Constants.expoConfig?.scheme}
-      </Text>
+      </Text> */}
 
       <Button
         title="Login as Guest"
         onPress={() =>
-          create()
+          signUpGuest()
         }
       />
 
@@ -48,19 +37,19 @@ export default function LoginScreen() {
           <View key={provider}>
             <Button
               title={`Login with ${provider}`}
-              onPress={async() => {
+              onPress={async () => {
                 try {
-                  await login({ provider: provider as OAuthProvider})
+                  await initOAuth({ provider: provider as OAuthProvider })
                 } catch (error) {
                   console.error("Error logging in with OAuth:", error);
                 }
               }
-            }
+              }
             ></Button>
           </View>
         ))}
       </View>
-      {error && <Text style={{ color: "red" }}>Error: {error}</Text>}
+      {error && <Text style={{ color: "red" }}>Error: {error.message}</Text>}
     </View>
   );
 }

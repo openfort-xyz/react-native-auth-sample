@@ -10,6 +10,7 @@ web-build/
 expo-env.d.ts
 
 # Native
+.kotlin/
 *.orig.*
 *.jks
 *.p8
@@ -36,9 +37,5 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
-<<<<<<< HEAD
 ios/
 android/
-=======
-ios/
->>>>>>> parent of 712a7ce (feat: update sample)
