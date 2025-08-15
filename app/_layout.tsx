@@ -1,18 +1,17 @@
 import { OpenfortProvider, RecoveryMethod } from "@openfort/react-native";
+import Constants from "expo-constants";
 import { Stack } from "expo-router";
-import React from "react";
-// import { baseSepolia } from "viem/chains";
 export default function RootLayout() {
 
   return (
     <OpenfortProvider
-      publishableKey="pk_test_af122dce-279e-5d50-ada1-bdcbf2fc671c"
+      publishableKey={Constants.expoConfig?.extra?.openfortPublishableKey}
       walletConfig={{
         recoveryMethod: RecoveryMethod.PASSWORD,
-        debug: true,
-        ethereumProviderPolicyId: "no",
-        shieldPublishableKey: "8415deef-9fd5-4b6a-8010-889aa513fbec",
-        shieldEncryptionKey: "AjpBnCCvakt79w1QpKO2w6mPwHa3fFT/z2xBeRb2YLvA",
+        debug: false,
+        ethereumProviderPolicyId: undefined, // replace with your gas sponsorship policy
+        shieldPublishableKey: Constants.expoConfig?.extra?.openfortShieldPublishableKey,
+        shieldEncryptionKey: Constants.expoConfig?.extra?.openfortShieldEncryptionKey,
         // createEncryptedSessionEndpoint: "https://your-api.com/create-encrypted-session",
       }}
       supportedChains={[

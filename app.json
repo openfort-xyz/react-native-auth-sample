@@ -12,7 +12,6 @@
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.openfort.exposample",
-      "associatedDomains": ["webcredentials:<your-associated-domain>"],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -30,6 +29,11 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      "openfortPublishableKey": "pk_test_af122dce-279e-5d50-ada1-bdcbf2fc671c",
+      "openfortShieldPublishableKey": "8415deef-9fd5-4b6a-8010-889aa513fbec",
+      "openfortShieldEncryptionKey": "AjpBnCCvakt79w1QpKO2w6mPwHa3fFT/z2xBeRb2YLvA"
     },
     "plugins": [
       "expo-router",

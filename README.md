@@ -1,123 +1,56 @@
 
-# Embedded Wallet with React Native (Sample)
+# Openfort Expo Starter
 
-Check the full guide [in the docs](https://www.openfort.io/docs/products/embedded-wallet/react-native)
-
-## Notes
-Because we are using `mmkv` storage, expo-go will not work. To run your app use `expo run:ios` or `expo run:android`.
+This is minimal installation of the Openfort SDK for React Native, using Expo.
+Check the full guide [in the documentation](https://www.openfort.io/docs/products/embedded-wallet/react-native)
 
 ## Setup
 
 1. Clone this repository and open it in your terminal. 
+  ```sh
+  git clone https://github.com/openfort-xyz/react-native-auth-sample.git
+  ```
+
+2. Install dependencies
+  ```sh
+  npm i 
+  ```
+
+3. Configure an app client in your [Dashboard](https://dashboard.openfort.io/api-keys), and add your Openfort keys in `app.json`
+
+   ```json
+   ...
+    "extra": {
+      "openfortPublishableKey": "<your-openfort-publishable-key>",
+      "openfortShieldPublishableKey": "<your-shield-publishable-key>",
+      // the encryption key should only be hardcoded and used in the client when using password/passkey based recovery methods.
+      "openfortShieldEncryptionKey": "<your-shield-encryption-key>"
+    }
+   ...
+   ```
+
+4. Configure your application identifier in `app.json`. This should match the bundle identifier for your app in the app store.
+
+   ```json
+   ...
+    "ios": {
+      "bundleIdentifier": "com.example.myapp"
+    },
+    "android": {
+      "package": "com.example.myapp"
+    }
+   ...
+   ```
+
+## Run the app
+
 ```sh
-git clone https://github.com/openfort-xyz/react-native-auth-sample.git
-```
+# expo go
+npm run start
 
-2. Install the necessary dependencies (including [Openfort JS](https://www.npmjs.com/package/@openfort/openfort-js)) with `npm`.
-```sh
-npm i 
-```
+# ios
+npm run ios
 
-3. Clone the (sample backend repository)[https://github.com/openfort-xyz/auth-sample-backend]
-    Set up the backend sample and set the port to 3110.
-
-4. Initialize your environment variables by copying the `.env.example` file to an `.env.local` file. Then, in `.env.local`, [paste your Openfort ID from the dashboard](https://www.openfort.io/docs/configuration/api-keys).
-```sh
-# In your terminal, create .env.local from .env.example
-cp .env.example .env.local
-
-# Add your Openfort keys to .env.local
-EXPO_PUBLIC_OPENFORT_PUBLIC_KEY=
-EXPO_PUBLIC_SHIELD_API_KEY=
-
-EXPO_PUBLIC_DEV_EMAIL=
-EXPO_PUBLIC_DEV_PWD=
-
-EXPO_PUBLIC_CHAIN_ID=
-```
-
-
-## How it works
-
-If you do not already have a `metro.config.js`, create one with those required extra node modules:
-```
-// sample metro.config.js
-const { getDefaultConfig } = require('expo/metro-config');
-
-module.exports = (() => {
-  const config = getDefaultConfig(__dirname);
-
-  // Add shims for Node.js modules like crypto and stream
-  config.resolver.extraNodeModules = {
-    crypto: require.resolve('react-native-crypto'),
-    stream: require.resolve('stream-browserify'),
-    buffer: require.resolve('buffer'),
-  };
-
-  return config;
-})();
-
-```
-### Import `Openfort` at the top of your app
-The first file loaded should be Openfort-js polyfills: 
-```
-import  "@openfort/react-native/polyfills";
-```
-This will ensure the correct modules are imported and will ensure `openfort-js` works properly.
-
-### Configure `Openfort`
-
-Configure openfort, the same way that you would with openfort-js
-```
-import Openfort from "@openfort/openfort-js";
-
-const openfort = new Openfort({
-  baseConfiguration: {
-    publishableKey: "YOUR_OPENFORT_PUBLISHABLE_KEY",
-  },
-  shieldConfiguration: {
-    shieldPublishableKey: "YOUR_SHIELD_PUBLISHABLE_KEY",
-  }
-});
-```
-Check out the documentation [here](https://www.openfort.io/docs/products/embedded-wallet/javascript/quickstart#4-import-openfort-into-your-app)
-
-### Render secure WebView
-
-Openfort uses a `WebView` (from `react-native-webview`) to operate as a secure environment, managing the private key and executing wallet operations. [Learn more](https://www.openfort.io/docs/development/security#embedded-self-custodial-signer).
-
-This WebView needs to always be displayed, it is recommended to put it on top of your app. It is wrapped inside a view with `flex: 0`
-
-Simply import it from `@openfort/react-native`
-
-```
-// Sample app/_layout.tsx using expo router
-import { Iframe } from  '@openfort/react-native';
-
-export default function RootLayout() {
-
-  return (
-    <>
-      <Iframe />
-      <Slot />
-    </>
-  );
-}
-```
-
-### `OpenfortProvider`
-
-The app is wrapped with `OpenfortProvider`. This loads the WebView and creates a react context to simplify some of openfort funcitonalities with `useOpenfort` hook.
-
-```
-// app/_layout.tsx
-
-export default function RootLayout() {
-
-  return (
-    <OpenfortProvider>
-      <Slot />
-    </OpenfortProvider>
-  );
-}
+# android
+npm run android
 ```
