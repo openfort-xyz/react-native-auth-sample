@@ -153,7 +153,14 @@ export default function WalletManagement() {
       <TouchableOpacity
         style={[styles.createWalletButton, isCreating && styles.disabledButton]}
         onPress={() => createWallet({
-          onError: (error) => { console.error("Error creating wallet: " + error.message); },
+          onError: (error) => {
+            console.error("Error creating wallet: " + error.message);
+            showModal({
+              title: "Wallet Creation Failed",
+              message: String(error?.message ?? "Unknown error while creating wallet."),
+              variant: "error",
+            });
+          },
           onSuccess: ({ wallet }) => { console.log("Wallet created successfully: " + wallet?.address); },
         })}
         disabled={isCreating}
