@@ -1,71 +1,38 @@
-import { UserWallet, useWallets } from "@openfort/react-native";
-import { useState } from "react";
+import { UserWallet, useOpenfort } from "@openfort/react-native";
 
 export interface WalletService {
   wallets: UserWallet[] | null;
   activeWallet: UserWallet | null;
   isCreatingWallet: boolean;
-  createNewWallet: (callbacks?: { onSuccess?: (wallet: UserWallet) => void; onError?: (error: Error) => void }) => void;
-  setActiveWallet: (params: { address: string; chainId: number; onSuccess?: () => void; onError?: (error: Error) => void }) => void;
+  createNewWallet: (callbacks?: { onSuccess?: (wallet: UserWallet) => void; onError?: (error: Error) => void }) => Promise<any>;
+  setActiveWallet: (params: { address: string; chainId: number; onSuccess?: () => void; onError?: (error: Error) => void }) => Promise<void>;
   signMessage: (wallet: UserWallet, message: string) => Promise<string>;
   switchChain: (wallet: UserWallet, chainId: string) => Promise<void>;
   isSwitchingChain: boolean;
 }
 
 export const useOpenfortWallet = (): WalletService => {
-  const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets();
-  const [isSwitchingChain, setIsSwitchingChain] = useState<boolean>(false);
+  const { 
+    wallets, 
+    setActiveWallet, 
+    createWallet, 
+    activeWallet, 
+    isCreatingWallet, 
+    signMessage, 
+    switchChain, 
+    isSwitchingChain 
+  } = useOpenfort();
 
-  const signMessage = async (wallet: UserWallet, message: string): Promise<string> => {
-    const provider = await wallet.getProvider();
-    return await provider.request({
-      method: "personal_sign",
-      params: [message, wallet.address],
-    });
-  };
-
-  const switchChain = async (wallet: UserWallet, chainId: string): Promise<void> => {
-    setIsSwitchingChain(true);
-    try {
-      const provider = await wallet.getProvider();
-      await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x" + Number(chainId).toString(16) }],
-      });
-    } finally {
-      setIsSwitchingChain(false);
-    }
-  };
-
-  const createNewWallet = (callbacks?: { onSuccess?: (wallet: UserWallet) => void; onError?: (error: Error) => void }) => {
-    createWallet({
-      onError: callbacks?.onError || ((error) => console.error("Wallet creation failed:", error.message)),
-      onSuccess: ({ wallet }) => {
-        console.log("Wallet created successfully:", wallet?.address);
-        if (callbacks?.onSuccess && wallet) {
-          callbacks.onSuccess(wallet);
-        }
-      },
-    });
-  };
-
-  const setActiveWalletWithCallbacks = (params: { address: string; chainId: number; onSuccess?: () => void; onError?: (error: Error) => void }) => {
-    const { address, chainId, onSuccess, onError } = params;
-    setActiveWallet({ address: address as `0x${string}`, chainId })
-      .then(() => {
-        onSuccess?.();
-      })
-      .catch((error: Error) => {
-        onError?.(error);
-      });
+  const createNewWallet = async (callbacks?: { onSuccess?: (wallet: UserWallet) => void; onError?: (error: Error) => void }) => {
+    return createWallet(callbacks);
   };
 
   return {
     wallets,
     activeWallet,
-    isCreatingWallet: isCreating,
+    isCreatingWallet,
     createNewWallet,
-    setActiveWallet: setActiveWalletWithCallbacks,
+    setActiveWallet,
     signMessage,
     switchChain,
     isSwitchingChain,

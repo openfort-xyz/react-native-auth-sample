@@ -2,6 +2,8 @@
 
 This document provides a comprehensive guide to understand how the Openfort SDK is implemented in this React Native Expo sample application. The implementation has been structured to be modular, clear, and easily reproducible in other applications.
 
+**🚀 Latest Update**: This implementation now leverages the new consolidated `useOpenfort` hook that includes all functionality (authentication, user management, OAuth providers, and wallet operations) in a single, comprehensive hook. Our library services now act as lightweight wrappers around this powerful hook, providing even cleaner and more maintainable code.
+
 ## Table of Contents
 
 1. [Project Structure](#project-structure)
@@ -104,18 +106,19 @@ import { OpenfortProvider, OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } fr
 
 ### File: `lib/openfort/auth.ts`
 
-Provides a unified interface for all authentication operations.
+Provides a unified interface for all authentication operations by leveraging the new consolidated `useOpenfort` hook.
 
 #### Core Interface:
 
 ```typescript
 export interface AuthService {
   signUpGuest: () => Promise<any>;
-  signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
+  signInWithOAuth: (provider: OAuthProvider, redirectUri?: string) => Promise<any>;
   linkOAuthAccount: (provider: OAuthProvider) => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticating: boolean;
   authError: Error | null;
+  isProviderLoading: (provider: OAuthProvider) => boolean;
 }
 ```
 
@@ -132,14 +135,42 @@ export const PROVIDER_CONFIG = {
 };
 ```
 
-#### Implementation Example:
+#### Implementation:
+
+The auth service now leverages the consolidated `useOpenfort` hook which includes all authentication functionality:
+
+```typescript
+export const useOpenfortAuth = (): AuthService => {
+  const { 
+    signUpGuest, 
+    signInWithProvider, 
+    linkProvider, 
+    signOut, 
+    isAuthenticating, 
+    authError, 
+    isProviderLoading 
+  } = useOpenfort();
+
+  return {
+    signUpGuest,
+    signInWithOAuth: signInWithProvider,
+    linkOAuthAccount: linkProvider,
+    signOut,
+    isAuthenticating,
+    authError,
+    isProviderLoading,
+  };
+};
+```
+
+#### Usage Example:
 
 ```typescript
 // In LoginScreen component
 import { useOpenfortAuth, OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/lib/openfort";
 
 export default function LoginScreen() {
-  const { signUpGuest, signInWithOAuth, isAuthenticating, authError } = useOpenfortAuth();
+  const { signUpGuest, signInWithOAuth, isAuthenticating, authError, isProviderLoading } = useOpenfortAuth();
 
   return (
     <View>
@@ -153,9 +184,14 @@ export default function LoginScreen() {
         <TouchableOpacity
           key={provider}
           onPress={() => signInWithOAuth(provider)}
-          disabled={isAuthenticating}
+          disabled={isAuthenticating || isProviderLoading(provider)}
         >
-          <Text>Continue with {PROVIDER_CONFIG[provider].name}</Text>
+          <Text>
+            {isProviderLoading(provider) 
+              ? "Loading..." 
+              : `Continue with ${PROVIDER_CONFIG[provider].name}`
+            }
+          </Text>
         </TouchableOpacity>
       ))}
 
@@ -170,7 +206,7 @@ export default function LoginScreen() {
 
 ### File: `lib/openfort/wallet.ts`
 
-Centralizes all wallet-related operations with a clean service interface.
+Centralizes all wallet-related operations by leveraging the consolidated `useOpenfort` hook.
 
 #### Core Interface:
 
@@ -179,10 +215,11 @@ export interface WalletService {
   wallets: UserWallet[] | null;
   activeWallet: UserWallet | null;
   isCreatingWallet: boolean;
-  createNewWallet: (callbacks?: WalletCallbacks) => void;
-  setActiveWallet: (params: SetWalletParams) => void;
+  createNewWallet: (callbacks?: { onSuccess?: (wallet: UserWallet) => void; onError?: (error: Error) => void }) => Promise<any>;
+  setActiveWallet: (params: { address: string; chainId: number; onSuccess?: () => void; onError?: (error: Error) => void }) => Promise<void>;
   signMessage: (wallet: UserWallet, message: string) => Promise<string>;
   switchChain: (wallet: UserWallet, chainId: string) => Promise<void>;
+  isSwitchingChain: boolean;
 }
 ```
 

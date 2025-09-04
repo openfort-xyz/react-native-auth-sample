@@ -1,4 +1,4 @@
-import { useOpenfort, useUser } from "@openfort/react-native";
+import { useOpenfort } from "@openfort/react-native";
 
 export interface UserService {
   user: any | null;
@@ -9,20 +9,15 @@ export interface UserService {
 }
 
 export const useOpenfortUser = (): UserService => {
-  const { user } = useUser();
-  const { isReady: isUserReady, error: userError } = useOpenfort();
+  const { user, isUserReady, userError, isProviderLinked } = useOpenfort();
   
   const linkedAccounts = user?.linkedAccounts || [];
-  
-  const isAccountLinked = (provider: string): boolean => {
-    return linkedAccounts.some((acc: any) => acc.provider === provider);
-  };
 
   return {
     user,
     isUserReady,
     userError,
     linkedAccounts,
-    isAccountLinked,
+    isAccountLinked: isProviderLinked,
   };
 };

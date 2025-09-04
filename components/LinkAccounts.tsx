@@ -1,13 +1,10 @@
 import { OAUTH_PROVIDERS, PROVIDER_CONFIG, useOpenfortAuth, useOpenfortUser } from "@/lib/openfort";
 import { Ionicons } from "@expo/vector-icons";
-import { OAuthProvider } from "@openfort/react-native";
-import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function LinkAccounts() {
   const { linkOAuthAccount, isAuthenticating, isProviderLoading } = useOpenfortAuth();
   const { user, isAccountLinked } = useOpenfortUser();
-  const [linkingProvider, setLinkingProvider] = useState<OAuthProvider | null>(null);
 
   return (
     <View style={styles.sectionContainer}>

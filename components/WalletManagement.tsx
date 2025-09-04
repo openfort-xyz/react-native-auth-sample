@@ -6,7 +6,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function WalletManagement() {
   const [chainId, setChainId] = useState("84532");
-  // isSwitchingChain is now provided by the library hook
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState<string | undefined>(undefined);
   const [modalMessage, setModalMessage] = useState<string | undefined>(undefined);

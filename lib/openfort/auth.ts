@@ -1,5 +1,4 @@
-import { OAuthProvider, useGuestAuth, useOAuth, useOpenfort } from "@openfort/react-native";
-import { useState } from "react";
+import { OAuthProvider, useOpenfort } from "@openfort/react-native";
 
 export const OAUTH_PROVIDERS = ["google", "apple", "twitter", "discord"] as const;
 
@@ -12,47 +11,32 @@ export const PROVIDER_CONFIG = {
 
 export interface AuthService {
   signUpGuest: () => Promise<any>;
-  signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
+  signInWithOAuth: (provider: OAuthProvider, redirectUri?: string) => Promise<any>;
   linkOAuthAccount: (provider: OAuthProvider) => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticating: boolean;
   authError: Error | null;
-  loadingProvider: OAuthProvider | null;
   isProviderLoading: (provider: OAuthProvider) => boolean;
 }
 
 export const useOpenfortAuth = (): AuthService => {
-  const { signUpGuest } = useGuestAuth();
-  const { initOAuth, linkOauth, isLoading, error } = useOAuth();
-  const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null);
-  const { logout } = useOpenfort();
-
-  const signInWithOAuth = async (provider: OAuthProvider) => {
-    try {
-      setLoadingProvider(provider);
-      await initOAuth({ provider });
-    } finally {
-      setLoadingProvider(null);
-    }
-  };
-
-  const linkOAuthAccount = async (provider: OAuthProvider) => {
-    try {
-      setLoadingProvider(provider);
-      await linkOauth({ provider });
-    } finally {
-      setLoadingProvider(null);
-    }
-  };
+  const { 
+    signUpGuest, 
+    signInWithProvider, 
+    linkProvider, 
+    signOut, 
+    isAuthenticating, 
+    authError, 
+    isProviderLoading 
+  } = useOpenfort();
 
   return {
     signUpGuest,
-    signInWithOAuth,
-    linkOAuthAccount,
-    signOut: logout,
-    isAuthenticating: isLoading,
-    authError: error || null,
-    loadingProvider,
-    isProviderLoading: (provider: OAuthProvider) => loadingProvider === provider,
+    signInWithOAuth: signInWithProvider,
+    linkOAuthAccount: linkProvider,
+    signOut,
+    isAuthenticating,
+    authError,
+    isProviderLoading,
   };
 };
