@@ -1,17 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { OAuthProvider, useGuestAuth, useOAuth } from "@openfort/react-native";
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-const providerConfig = {
-  twitter: { icon: "logo-twitter" as const, name: "Twitter", color: "#1DA1F2" },
-  google: { icon: "logo-google" as const, name: "Google", color: "#4285F4" },
-  discord: { icon: "logo-discord" as const, name: "Discord", color: "#5865F2" },
-  apple: { icon: "logo-apple" as const, name: "Apple", color: "#000000" },
-};
+import { useOpenfort } from "@openfort/react-native";
+import { OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/config/openfort";
 
 export default function LoginScreen() {
-  const { signUpGuest } = useGuestAuth()
-  const { initOAuth, error } = useOAuth();
+  const { signUpGuest, signInWithProvider, isAuthenticating, authError, isProviderLoading } = useOpenfort();
 
   return (
     <View style={styles.container}>
@@ -43,34 +36,38 @@ export default function LoginScreen() {
           <View style={styles.dividerLine} />
         </View>
 
-        {(["google", "apple", "twitter", "discord"] as const).map((provider) => {
-          const config = providerConfig[provider];
+        {OAUTH_PROVIDERS.map((provider) => {
+          const config = PROVIDER_CONFIG[provider];
+          const isThisProviderLoading = isProviderLoading(provider);
           return (
             <TouchableOpacity
               key={provider}
               style={[styles.providerButton]}
               onPress={async () => {
                 try {
-                  await initOAuth({ provider: provider as OAuthProvider })
+                  await signInWithProvider(provider)
                 } catch (error) {
                   console.error("Error logging in with OAuth:", error);
                 }
               }}
               activeOpacity={0.8}
+              disabled={isAuthenticating || isThisProviderLoading}
             >
               <View style={styles.providerButtonContent}>
                 <Ionicons name={config.icon} size={20} color={config.color} />
-                <Text style={styles.providerText}>Continue with {config.name}</Text>
+                <Text style={styles.providerText}>
+                  {isThisProviderLoading ? "Loading..." : `Continue with ${config.name}`}
+                </Text>
               </View>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      {error && (
+      {authError && (
         <View style={styles.errorContainer}>
           <Ionicons name="warning" size={16} color="#dc2626" />
-          <Text style={styles.errorText}>{error.message}</Text>
+          <Text style={styles.errorText}>{authError.message}</Text>
         </View>
       )}
     </View>

@@ -6,11 +6,10 @@ export default function Index() {
   const { user } = useOpenfort();
 
   if (user === null) {
-    console.warn('Tried to fetch user from Openfort. The user is not authenticated yet.');
+    console.warn('User not authenticated yet - showing login screen');
   } else {
-    console.log('Fetched user from Openfort:', user);
+    console.log('User authenticated successfully:', user);
   }
 
   return !user ? <LoginScreen /> : <UserScreen />;
-  // return <UserScreen />
 }

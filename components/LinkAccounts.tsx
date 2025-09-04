@@ -1,20 +1,10 @@
+import { OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/config/openfort";
 import { Ionicons } from "@expo/vector-icons";
-import { OAuthProvider, useOAuth, useUser } from "@openfort/react-native";
-import { useState } from "react";
+import { useOpenfort } from "@openfort/react-native";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const providerConfig = {
-  twitter: { icon: "logo-twitter" as const, name: "Twitter", color: "#1DA1F2" },
-  google: { icon: "logo-google" as const, name: "Google", color: "#4285F4" },
-  discord: { icon: "logo-discord" as const, name: "Discord", color: "#5865F2" },
-  apple: { icon: "logo-apple" as const, name: "Apple", color: "#000000" },
-};
-
 export default function LinkAccounts() {
-  const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
-  const [linkingProvider, setLinkingProvider] = useState<OAuthProvider | null>(null);
-  const { user } = useUser();
-  const linkedProviders = new Set((user?.linkedAccounts || []).map((acc: any) => acc.provider));
+  const { linkProvider, isAuthenticating, isProviderLoading, user, isProviderLinked } = useOpenfort();
 
   return (
     <View style={styles.sectionContainer}>
@@ -23,26 +13,23 @@ export default function LinkAccounts() {
         <Text style={styles.sectionTitle}>Link Accounts</Text>
       </View>
       <View style={styles.linkAccountsList}>
-        {(["google", "apple", "twitter", "discord"] as const).map((provider) => {
-          const config = providerConfig[provider];
-          const isThisLoading = linkingProvider === (provider as OAuthProvider);
-          const isLinked = linkedProviders.has(provider);
+        {OAUTH_PROVIDERS.map((provider) => {
+          const config = PROVIDER_CONFIG[provider];
+          const isThisLoading = isProviderLoading(provider);
+          const isLinked = isProviderLinked(provider);
           return (
             <TouchableOpacity
               key={provider}
               style={[styles.linkAccountButton, (isThisLoading || isLinked) && styles.disabledButton]}
               onPress={async () => {
-                if (isLinked || isOAuthLoading || linkingProvider) return;
+                if (isLinked || isAuthenticating || isThisLoading) return;
                 try {
-                  setLinkingProvider(provider as OAuthProvider);
-                  await linkOauth({ provider: provider as OAuthProvider });
+                  await linkProvider(provider);
                 } catch (e) {
                   console.error("Error linking account:", e);
-                } finally {
-                  setLinkingProvider(null);
                 }
               }}
-              disabled={isLinked || Boolean(linkingProvider) || isOAuthLoading}
+              disabled={isLinked || isThisLoading || isAuthenticating}
               activeOpacity={0.7}
             >
               <Ionicons name={config.icon} size={20} color={config.color} />
