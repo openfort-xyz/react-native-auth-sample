@@ -1,5 +1,5 @@
 import { OAuthProvider, useOAuth, useOpenfort, UserWallet, useUser, useWallets } from "@openfort/react-native";
-import React, { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, ScrollView, Text, View } from "react-native";
 
 
@@ -9,10 +9,8 @@ export const UserScreen = () => {
 
   // const { signOut } = useSignOut();
   const { user } = useUser();
-  const { isReady, error, logout: signOut } = useOpenfort();
-  console.log('isReady', isReady)
-  console.log('error', error)
-  const { link, isLoading: isOAuthLoading } = useOAuth();
+  const { isReady: isOpenfortUserReady, error: errorInOpenfortUser, logout: signOut } = useOpenfort();
+  const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
 
   const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets();
 
@@ -63,6 +61,19 @@ export const UserScreen = () => {
     []
   );
 
+  useEffect(() => {
+    if (isOpenfortUserReady) {
+      console.log('User fetched from Openfort is ready.');
+    }
+    else {
+      console.warn('User fetched from Openfort is not ready.');
+    }
+  
+    if (errorInOpenfortUser) {
+      console.error('Error fetching user from Openfort:', errorInOpenfortUser);
+    }
+  }, [isOpenfortUserReady, errorInOpenfortUser]);
+
   if (!user) {
     return null;
   }
@@ -77,7 +88,7 @@ export const UserScreen = () => {
               disabled={isOAuthLoading}
               onPress={async () => {
                 try {
-                  await link({ provider: provider as OAuthProvider })
+                  await linkOauth({ provider: provider as OAuthProvider })
                 } catch (e) {
                   console.error("Error linking account:", e);
                 }
