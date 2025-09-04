@@ -1,6 +1,6 @@
-import { OAuthProvider, useGuestAuth, useOAuth } from "@openfort/react-native";
-import { TouchableOpacity, Text, View, StyleSheet, StatusBar } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { OAuthProvider, useGuestAuth, useOAuth } from "@openfort/react-native";
+import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const providerConfig = {
   twitter: { icon: "logo-twitter" as const, name: "Twitter", color: "#1DA1F2" },
@@ -95,6 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 25,
     marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: {
