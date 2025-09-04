@@ -18,6 +18,7 @@ export default function WalletManagement() {
   const [modalVariant, setModalVariant] = useState<"success" | "error" | "info">("info");
 
   const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets();
+  const otherWallets = (wallets || []).filter((w) => w.address !== activeWallet?.address);
 
   const showModal = useCallback((opts: { title?: string; message?: string; variant?: "success" | "error" | "info" }) => {
     setModalTitle(opts.title);
@@ -87,37 +88,35 @@ export default function WalletManagement() {
               {isSwitchingChain ? "Switching..." : chainConfig[chainId as keyof typeof chainConfig]?.name}
             </Text>
           </View>
+          <View style={styles.activeActionsRow}>
+            <TouchableOpacity
+              style={styles.actionChip}
+              onPress={async () => {
+                const chainToSwitch = chainId === "11155111" ? "84532" : "11155111";
+                activeWallet && switchChain(activeWallet, chainToSwitch);
+                setChainId(chainToSwitch);
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="swap-horizontal" size={16} color="#374151" />
+              <Text style={styles.actionChipText}>
+                Switch to {chainConfig[chainId === "11155111" ? "84532" : "11155111" as keyof typeof chainConfig]?.name}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionChip} onPress={() => signMessage()} activeOpacity={0.8}>
+              <Ionicons name="create" size={16} color="#374151" />
+              <Text style={styles.actionChipText}>Sign Message</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
-      <View style={styles.walletActions}>
-        <TouchableOpacity
-          style={styles.chainSwitchButton}
-          onPress={async () => {
-            const chainToSwitch = chainId === "11155111" ? "84532" : "11155111";
-            activeWallet && switchChain(activeWallet, chainToSwitch);
-            setChainId(chainToSwitch);
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="swap-horizontal" size={18} color="#374151" />
-          <Text style={styles.chainSwitchText}>
-            Switch to {chainConfig[chainId === "11155111" ? "84532" : "11155111" as keyof typeof chainConfig]?.name}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.signMessageButton}
-          onPress={() => signMessage()}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="create" size={18} color="#374151" />
-          <Text style={styles.signMessageText}>Sign Message</Text>
-        </TouchableOpacity>
-      </View>
+      {otherWallets.length > 0 && (
+        <Text style={styles.sectionSubtitle}>Other Wallets</Text>
+      )}
 
       <View style={styles.walletsGrid}>
-        {wallets.map((w, i) => (
+        {otherWallets.map((w, i) => (
           <TouchableOpacity
             key={w.address + i}
             style={[styles.walletCard, activeWallet?.address === w.address && styles.activeWalletCard]}
@@ -185,12 +184,19 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 16,
   },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
   disabledButton: {
     opacity: 0.6,
   },
   currentWalletCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
     marginBottom: 20,
     shadowColor: '#000',
@@ -224,12 +230,40 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: '#f0fdf4',
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 8,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
   },
   chainText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#16a34a',
+  },
+  activeActionsRow: {
+    flexDirection: 'column',
+    gap: 8,
+    marginTop: 12,
+  },
+  actionChip: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  actionChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    flexShrink: 1,
   },
   walletsGrid: {
     flexDirection: 'column',
