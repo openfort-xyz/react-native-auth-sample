@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
-import { OpenfortProvider, OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } from "@/lib/openfort";
+import { OpenfortProvider } from "@openfort/react-native";
+import { OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } from "@/config/openfort";
 
 export default function RootLayout() {
   return (

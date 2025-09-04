@@ -1,6 +1,7 @@
 import AppModal from "@/components/AppModal";
-import { CHAIN_CONFIG, useOpenfortWallet } from "@/lib/openfort";
+import { CHAIN_CONFIG } from "@/config/openfort";
 import { Ionicons } from "@expo/vector-icons";
+import { useOpenfort } from "@openfort/react-native";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -11,7 +12,7 @@ export default function WalletManagement() {
   const [modalMessage, setModalMessage] = useState<string | undefined>(undefined);
   const [modalVariant, setModalVariant] = useState<"success" | "error" | "info">("info");
 
-  const { wallets, setActiveWallet, createNewWallet, activeWallet, isCreatingWallet, signMessage, switchChain, isSwitchingChain } = useOpenfortWallet();
+  const { wallets, setActiveWallet, createWallet, activeWallet, isCreatingWallet, signMessage, switchChain, isSwitchingChain } = useOpenfort();
   const otherWallets = (wallets || []).filter((w) => w.address !== activeWallet?.address);
 
   const showModal = useCallback((opts: { title?: string; message?: string; variant?: "success" | "error" | "info" }) => {
@@ -138,7 +139,7 @@ export default function WalletManagement() {
 
       <TouchableOpacity
         style={[styles.createWalletButton, isCreatingWallet && styles.disabledButton]}
-        onPress={() => createNewWallet({
+        onPress={() => createWallet({
           onError: (error) => {
             console.error("Error creating wallet: " + error.message);
             showModal({

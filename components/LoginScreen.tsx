@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useOpenfortAuth, OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/lib/openfort";
+import { useOpenfort } from "@openfort/react-native";
+import { OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/config/openfort";
 
 export default function LoginScreen() {
-  const { signUpGuest, signInWithOAuth, isAuthenticating, authError } = useOpenfortAuth();
+  const { signUpGuest, signInWithProvider, isAuthenticating, authError, isProviderLoading } = useOpenfort();
 
   return (
     <View style={styles.container}>
@@ -37,23 +38,26 @@ export default function LoginScreen() {
 
         {OAUTH_PROVIDERS.map((provider) => {
           const config = PROVIDER_CONFIG[provider];
+          const isThisProviderLoading = isProviderLoading(provider);
           return (
             <TouchableOpacity
               key={provider}
               style={[styles.providerButton]}
               onPress={async () => {
                 try {
-                  await signInWithOAuth(provider)
+                  await signInWithProvider(provider)
                 } catch (error) {
                   console.error("Error logging in with OAuth:", error);
                 }
               }}
               activeOpacity={0.8}
-              disabled={isAuthenticating}
+              disabled={isAuthenticating || isThisProviderLoading}
             >
               <View style={styles.providerButtonContent}>
                 <Ionicons name={config.icon} size={20} color={config.color} />
-                <Text style={styles.providerText}>Continue with {config.name}</Text>
+                <Text style={styles.providerText}>
+                  {isThisProviderLoading ? "Loading..." : `Continue with ${config.name}`}
+                </Text>
               </View>
             </TouchableOpacity>
           );

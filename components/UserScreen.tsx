@@ -2,7 +2,7 @@ import LinkAccounts from "@/components/LinkAccounts";
 import SignOutButton from "@/components/SignOutButton";
 import UserIdCard from "@/components/UserIdCard";
 import WalletManagement from "@/components/WalletManagement";
-import { useOpenfortUser } from "@/lib/openfort";
+import { useOpenfort } from "@openfort/react-native";
 import { useEffect } from "react";
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from "react-native";
 
@@ -11,7 +11,7 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from "react-nat
 // Wallet styles and logic have been extracted to `WalletManagement` component
 
 export const UserScreen = () => {
-  const { user, isUserReady, userError } = useOpenfortUser();
+  const { user, isUserReady, userError } = useOpenfort();
 
   useEffect(() => {
     if (isUserReady) {

@@ -1,41 +1,42 @@
 # Openfort SDK Implementation Guide
 
-This document provides a comprehensive guide to understand how the Openfort SDK is implemented in this React Native Expo sample application. The implementation has been structured to be modular, clear, and easily reproducible in other applications.
+This document provides a comprehensive guide to understand how the Openfort SDK is implemented in this React Native Expo sample application. The implementation leverages the powerful consolidated `useOpenfort` hook directly in components for maximum simplicity and clarity.
 
-**🚀 Latest Update**: This implementation now leverages the new consolidated `useOpenfort` hook that includes all functionality (authentication, user management, OAuth providers, and wallet operations) in a single, comprehensive hook. Our library services now act as lightweight wrappers around this powerful hook, providing even cleaner and more maintainable code.
+**🚀 Latest Update**: This implementation now uses the consolidated `useOpenfort` hook directly in components, eliminating the need for wrapper services. The hook provides all functionality (authentication, user management, OAuth providers, and wallet operations) in a single, comprehensive interface.
 
 ## Table of Contents
 
 1. [Project Structure](#project-structure)
 2. [Configuration](#configuration)
-3. [Authentication Service](#authentication-service)
-4. [Wallet Management](#wallet-management)
-5. [User Management](#user-management)
-6. [Component Integration](#component-integration)
-7. [How to Reproduce in Your App](#how-to-reproduce-in-your-app)
+3. [Direct Hook Usage](#direct-hook-usage)
+4. [Component Integration Examples](#component-integration-examples)
+5. [How to Reproduce in Your App](#how-to-reproduce-in-your-app)
 
 ## Project Structure
 
-The Openfort SDK logic has been isolated into dedicated modules under `lib/openfort/`:
+The implementation is now streamlined with configuration isolated and components using `useOpenfort` directly:
 
 ```
-lib/openfort/
-├── index.ts          # Main export file
-├── config.ts         # Configuration constants and chains
-├── auth.ts           # Authentication service and hooks
-├── wallet.ts         # Wallet management service
-└── user.ts           # User management service
+config/
+└── openfort.ts       # Configuration constants and chains
+
+components/
+├── LoginScreen.tsx   # Uses useOpenfort for authentication
+├── UserScreen.tsx    # Uses useOpenfort for user state
+├── LinkAccounts.tsx  # Uses useOpenfort for OAuth linking
+├── WalletManagement.tsx # Uses useOpenfort for wallet operations
+└── SignOutButton.tsx # Uses useOpenfort for logout
 ```
 
-This modular approach ensures:
-- **Clear separation of concerns**: Each file handles a specific domain
-- **Easy maintenance**: Changes are localized to specific modules
-- **Reusability**: Services can be easily imported and used across components
-- **Type safety**: Each service provides proper TypeScript interfaces
+This approach ensures:
+- **Maximum simplicity**: Direct use of the comprehensive hook
+- **No abstraction overhead**: Components use the hook's API directly  
+- **Easy maintenance**: All functionality comes from one source
+- **Type safety**: Full TypeScript support from the hook
 
 ## Configuration
 
-### File: `lib/openfort/config.ts`
+### File: `config/openfort.ts`
 
 This file centralizes all Openfort configuration:
 
@@ -73,7 +74,17 @@ export const SUPPORTED_CHAINS = [
     nativeCurrency: { name: 'Sepolia Ether', symbol: 'ETH', decimals: 18 },
     rpcUrls: { default: { http: ['https://ethereum-sepolia-rpc.publicnode.com'] } },
   },
-];
+] as const;
+
+// OAuth providers and UI configuration
+export const OAUTH_PROVIDERS = ["google", "apple", "twitter", "discord"] as const;
+
+export const PROVIDER_CONFIG = {
+  twitter: { icon: "logo-twitter" as const, name: "Twitter", color: "#1DA1F2" },
+  google: { icon: "logo-google" as const, name: "Google", color: "#4285F4" },
+  discord: { icon: "logo-discord" as const, name: "Discord", color: "#5865F2" },
+  apple: { icon: "logo-apple" as const, name: "Apple", color: "#000000" },
+};
 
 // Chain configuration for UI display
 export const CHAIN_CONFIG = {
@@ -86,7 +97,8 @@ export const CHAIN_CONFIG = {
 
 ```typescript
 // app/_layout.tsx
-import { OpenfortProvider, OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } from "@/lib/openfort";
+import { OpenfortProvider } from "@openfort/react-native";
+import { OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } from "@/config/openfort";
 
 <OpenfortProvider
   publishableKey={OPENFORT_CONFIG.publishableKey}
@@ -102,75 +114,77 @@ import { OpenfortProvider, OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } fr
 </OpenfortProvider>
 ```
 
-## Authentication Service
+## Direct Hook Usage
 
-### File: `lib/openfort/auth.ts`
+The implementation now uses the `useOpenfort` hook directly in components. This hook provides comprehensive access to all Openfort functionality:
 
-Provides a unified interface for all authentication operations by leveraging the new consolidated `useOpenfort` hook.
-
-#### Core Interface:
+### Available Hook Features
 
 ```typescript
-export interface AuthService {
-  signUpGuest: () => Promise<any>;
-  signInWithOAuth: (provider: OAuthProvider, redirectUri?: string) => Promise<any>;
-  linkOAuthAccount: (provider: OAuthProvider) => Promise<void>;
-  signOut: () => Promise<void>;
-  isAuthenticating: boolean;
-  authError: Error | null;
-  isProviderLoading: (provider: OAuthProvider) => boolean;
+const {
+  // Core state
+  user,                    // Current authenticated user
+  isReady,                // Whether SDK is initialized
+  error,                  // Any SDK errors
+  
+  // Authentication
+  signUpGuest,            // Sign up as guest
+  signInWithProvider,     // Sign in with OAuth
+  signOut,                // Sign out user
+  isAuthenticating,       // Auth loading state
+  authError,              // Auth-specific errors
+  
+  // OAuth providers
+  isProviderLoading,      // Check if provider is loading
+  isProviderLinked,       // Check if provider is linked
+  linkProvider,           // Link OAuth provider
+  
+  // User state
+  isUserReady,           // User is authenticated and ready
+  userError,             // User-related errors
+  
+  // Wallet management
+  wallets,               // Array of user wallets
+  activeWallet,          // Currently active wallet
+  createWallet,          // Create new wallet
+  setActiveWallet,       // Set active wallet
+  isCreatingWallet,      // Wallet creation loading state
+  signMessage,           // Sign message with wallet
+  switchChain,           // Switch blockchain network
+  isSwitchingChain,      // Chain switching loading state
+} = useOpenfort();
+```
+
+## Component Integration Examples
+
+### 1. Authentication Check (`app/index.tsx`)
+
+```typescript
+import { useOpenfort } from '@openfort/react-native';
+import LoginScreen from '@/components/LoginScreen';
+import { UserScreen } from '@/components/UserScreen';
+
+export default function Index() {
+  const { user } = useOpenfort();
+
+  if (user === null) {
+    console.warn('User not authenticated yet - showing login screen');
+  } else {
+    console.log('User authenticated successfully:', user);
+  }
+
+  return !user ? <LoginScreen /> : <UserScreen />;
 }
 ```
 
-#### OAuth Provider Configuration:
+### 2. Authentication Flow (`LoginScreen.tsx`)
 
 ```typescript
-export const OAUTH_PROVIDERS = ["google", "apple", "twitter", "discord"] as const;
-
-export const PROVIDER_CONFIG = {
-  twitter: { icon: "logo-twitter" as const, name: "Twitter", color: "#1DA1F2" },
-  google: { icon: "logo-google" as const, name: "Google", color: "#4285F4" },
-  discord: { icon: "logo-discord" as const, name: "Discord", color: "#5865F2" },
-  apple: { icon: "logo-apple" as const, name: "Apple", color: "#000000" },
-};
-```
-
-#### Implementation:
-
-The auth service now leverages the consolidated `useOpenfort` hook which includes all authentication functionality:
-
-```typescript
-export const useOpenfortAuth = (): AuthService => {
-  const { 
-    signUpGuest, 
-    signInWithProvider, 
-    linkProvider, 
-    signOut, 
-    isAuthenticating, 
-    authError, 
-    isProviderLoading 
-  } = useOpenfort();
-
-  return {
-    signUpGuest,
-    signInWithOAuth: signInWithProvider,
-    linkOAuthAccount: linkProvider,
-    signOut,
-    isAuthenticating,
-    authError,
-    isProviderLoading,
-  };
-};
-```
-
-#### Usage Example:
-
-```typescript
-// In LoginScreen component
-import { useOpenfortAuth, OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/lib/openfort";
+import { useOpenfort } from "@openfort/react-native";
+import { OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/config/openfort";
 
 export default function LoginScreen() {
-  const { signUpGuest, signInWithOAuth, isAuthenticating, authError, isProviderLoading } = useOpenfortAuth();
+  const { signUpGuest, signInWithProvider, isAuthenticating, authError, isProviderLoading } = useOpenfort();
 
   return (
     <View>
@@ -180,20 +194,20 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       {/* OAuth Providers */}
-      {OAUTH_PROVIDERS.map((provider) => (
-        <TouchableOpacity
-          key={provider}
-          onPress={() => signInWithOAuth(provider)}
-          disabled={isAuthenticating || isProviderLoading(provider)}
-        >
-          <Text>
-            {isProviderLoading(provider) 
-              ? "Loading..." 
-              : `Continue with ${PROVIDER_CONFIG[provider].name}`
-            }
-          </Text>
-        </TouchableOpacity>
-      ))}
+      {OAUTH_PROVIDERS.map((provider) => {
+        const isThisProviderLoading = isProviderLoading(provider);
+        return (
+          <TouchableOpacity
+            key={provider}
+            onPress={() => signInWithProvider(provider)}
+            disabled={isAuthenticating || isThisProviderLoading}
+          >
+            <Text>
+              {isThisProviderLoading ? "Loading..." : `Continue with ${PROVIDER_CONFIG[provider].name}`}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
 
       {/* Error Display */}
       {authError && <Text>Error: {authError.message}</Text>}
@@ -202,125 +216,13 @@ export default function LoginScreen() {
 }
 ```
 
-## Wallet Management
-
-### File: `lib/openfort/wallet.ts`
-
-Centralizes all wallet-related operations by leveraging the consolidated `useOpenfort` hook.
-
-#### Core Interface:
+### 3. User State Management (`UserScreen.tsx`)
 
 ```typescript
-export interface WalletService {
-  wallets: UserWallet[] | null;
-  activeWallet: UserWallet | null;
-  isCreatingWallet: boolean;
-  createNewWallet: (callbacks?: { onSuccess?: (wallet: UserWallet) => void; onError?: (error: Error) => void }) => Promise<any>;
-  setActiveWallet: (params: { address: string; chainId: number; onSuccess?: () => void; onError?: (error: Error) => void }) => Promise<void>;
-  signMessage: (wallet: UserWallet, message: string) => Promise<string>;
-  switchChain: (wallet: UserWallet, chainId: string) => Promise<void>;
-  isSwitchingChain: boolean;
-}
-```
-
-#### Key Operations:
-
-1. **Wallet Creation**:
-```typescript
-const { createNewWallet, isCreatingWallet } = useOpenfortWallet();
-
-createNewWallet({
-  onError: (error) => console.error("Failed to create wallet:", error),
-  onSuccess: (wallet) => console.log("Wallet created:", wallet.address),
-});
-```
-
-2. **Message Signing**:
-```typescript
-const { signMessage, activeWallet } = useOpenfortWallet();
-
-if (activeWallet) {
-  const signature = await signMessage(activeWallet, "Your message here");
-  console.log("Signature:", signature);
-}
-```
-
-3. **Chain Switching**:
-```typescript
-const { switchChain, activeWallet } = useOpenfortWallet();
-
-if (activeWallet) {
-  await switchChain(activeWallet, "84532"); // Switch to Base Sepolia
-}
-```
-
-#### Usage Example:
-
-```typescript
-// In WalletManagement component
-import { useOpenfortWallet, CHAIN_CONFIG } from "@/lib/openfort";
-
-export default function WalletManagement() {
-  const {
-    wallets,
-    activeWallet,
-    createNewWallet,
-    setActiveWallet,
-    signMessage,
-    switchChain,
-    isCreatingWallet
-  } = useOpenfortWallet();
-
-  return (
-    <View>
-      {/* Active Wallet Display */}
-      {activeWallet && (
-        <View>
-          <Text>Active Wallet: {activeWallet.address}</Text>
-          <TouchableOpacity onPress={() => signMessage(activeWallet, "Test message")}>
-            <Text>Sign Message</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Create New Wallet */}
-      <TouchableOpacity
-        onPress={() => createNewWallet()}
-        disabled={isCreatingWallet}
-      >
-        <Text>{isCreatingWallet ? "Creating..." : "Create Wallet"}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-```
-
-## User Management
-
-### File: `lib/openfort/user.ts`
-
-Handles user state and account linking functionality.
-
-#### Core Interface:
-
-```typescript
-export interface UserService {
-  user: any | null;
-  isUserReady: boolean;
-  userError: Error | null;
-  linkedAccounts: any[];
-  isAccountLinked: (provider: string) => boolean;
-}
-```
-
-#### Usage Example:
-
-```typescript
-// In UserScreen component
-import { useOpenfortUser } from "@/lib/openfort";
+import { useOpenfort } from "@openfort/react-native";
 
 export const UserScreen = () => {
-  const { user, isUserReady, userError, isAccountLinked } = useOpenfortUser();
+  const { user, isUserReady, userError } = useOpenfort();
 
   useEffect(() => {
     if (isUserReady) {
@@ -334,63 +236,122 @@ export const UserScreen = () => {
   if (!user) return null;
 
   return (
-    <View>
-      <Text>User ID: {user.id}</Text>
-      <Text>Google Linked: {isAccountLinked('google') ? 'Yes' : 'No'}</Text>
-      {/* Rest of user interface */}
-    </View>
+    <SafeAreaView>
+      <Text>Welcome, {user.id}!</Text>
+      {/* Other user interface components */}
+    </SafeAreaView>
   );
 };
 ```
 
-## Component Integration
-
-### Main App Structure
-
-#### 1. Provider Setup (`app/_layout.tsx`)
+### 4. OAuth Account Linking (`LinkAccounts.tsx`)
 
 ```typescript
-import { OpenfortProvider, OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } from "@/lib/openfort";
+import { useOpenfort } from "@openfort/react-native";
+import { OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/config/openfort";
 
-export default function RootLayout() {
+export default function LinkAccounts() {
+  const { linkProvider, isAuthenticating, isProviderLoading, isProviderLinked } = useOpenfort();
+
   return (
-    <OpenfortProvider
-      publishableKey={OPENFORT_CONFIG.publishableKey}
-      walletConfig={{
-        ...WALLET_CONFIG,
-        shieldPublishableKey: OPENFORT_CONFIG.shieldPublishableKey,
-        shieldEncryptionKey: OPENFORT_CONFIG.shieldEncryptionKey,
-      }}
-      verbose={OPENFORT_CONFIG.verbose}
-      supportedChains={SUPPORTED_CHAINS as any}
-    >
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-      </Stack>
-    </OpenfortProvider>
+    <View>
+      {OAUTH_PROVIDERS.map((provider) => {
+        const config = PROVIDER_CONFIG[provider];
+        const isThisLoading = isProviderLoading(provider);
+        const isLinked = isProviderLinked(provider);
+        
+        return (
+          <TouchableOpacity
+            key={provider}
+            onPress={() => linkProvider(provider)}
+            disabled={isLinked || isThisLoading || isAuthenticating}
+          >
+            <Text>
+              {isLinked ? `Linked with ${config.name}` : 
+               isThisLoading ? "Linking..." : 
+               `Link ${config.name}`}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
 }
 ```
 
-#### 2. Authentication Check (`app/index.tsx`)
+### 5. Wallet Management (`WalletManagement.tsx`)
 
 ```typescript
-import { useOpenfortUser } from '@/lib/openfort';
+import { useOpenfort } from "@openfort/react-native";
+import { CHAIN_CONFIG } from "@/config/openfort";
 
-export default function Index() {
-  const { user } = useOpenfortUser();
+export default function WalletManagement() {
+  const { 
+    wallets, 
+    activeWallet, 
+    createWallet, 
+    setActiveWallet, 
+    isCreatingWallet,
+    signMessage,
+    switchChain,
+    isSwitchingChain 
+  } = useOpenfort();
 
-  return !user ? <LoginScreen /> : <UserScreen />;
+  const handleSignMessage = async () => {
+    if (!activeWallet) return;
+    const signature = await signMessage(activeWallet, `Message: ${Date.now()}`);
+    console.log('Signature:', signature);
+  };
+
+  return (
+    <View>
+      {/* Active Wallet Display */}
+      {activeWallet && (
+        <View>
+          <Text>Active: {activeWallet.address.slice(0, 6)}...{activeWallet.address.slice(-4)}</Text>
+          <TouchableOpacity onPress={handleSignMessage}>
+            <Text>Sign Message</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Create New Wallet */}
+      <TouchableOpacity 
+        onPress={() => createWallet()} 
+        disabled={isCreatingWallet}
+      >
+        <Text>{isCreatingWallet ? "Creating..." : "Create Wallet"}</Text>
+      </TouchableOpacity>
+
+      {/* Chain Switching */}
+      {activeWallet && (
+        <TouchableOpacity 
+          onPress={() => switchChain(activeWallet, "11155111")} 
+          disabled={isSwitchingChain}
+        >
+          <Text>{isSwitchingChain ? "Switching..." : "Switch to Sepolia"}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 }
 ```
 
-#### 3. Component Integration Examples
+### 6. Sign Out (`SignOutButton.tsx`)
 
-**LoginScreen**: Uses `useOpenfortAuth` for authentication
-**UserScreen**: Uses `useOpenfortUser` for user state
-**WalletManagement**: Uses `useOpenfortWallet` for wallet operations  
-**LinkAccounts**: Uses both `useOpenfortAuth` and `useOpenfortUser`
-**SignOutButton**: Uses `useOpenfortAuth` for logout
+```typescript
+import { useOpenfort } from "@openfort/react-native";
+
+export default function SignOutButton() {
+  const { signOut } = useOpenfort();
+
+  return (
+    <TouchableOpacity onPress={signOut}>
+      <Text>Sign Out</Text>
+    </TouchableOpacity>
+  );
+}
+```
 
 ## How to Reproduce in Your App
 
@@ -417,15 +378,48 @@ Add your Openfort credentials to your app configuration:
 }
 ```
 
-### Step 3: Copy the Library Structure
+### Step 3: Create Configuration File
 
-1. Create `lib/openfort/` directory in your project
-2. Copy all files from this sample:
-   - `config.ts`
-   - `auth.ts`
-   - `wallet.ts`
-   - `user.ts`
-   - `index.ts`
+Create `config/openfort.ts` with your configuration:
+
+```typescript
+import { RecoveryMethod } from "@openfort/react-native";
+import Constants from "expo-constants";
+
+export const OPENFORT_CONFIG = {
+  publishableKey: Constants.expoConfig?.extra?.openfortPublishableKey,
+  shieldPublishableKey: Constants.expoConfig?.extra?.openfortShieldPublishableKey,
+  shieldEncryptionKey: Constants.expoConfig?.extra?.openfortShieldEncryptionKey,
+  verbose: true,
+  debug: false,
+};
+
+export const WALLET_CONFIG = {
+  recoveryMethod: RecoveryMethod.PASSWORD,
+  debug: false,
+  ethereumProviderPolicyId: undefined,
+  getEncryptionSession: async () => "1234567890",
+};
+
+export const SUPPORTED_CHAINS = [
+  {
+    id: 84532,
+    name: 'Base Sepolia',
+    nativeCurrency: { name: 'Base Sepolia Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: { default: { http: ['https://sepolia.base.org'] } },
+  },
+  // Add your chains here
+] as const;
+
+export const OAUTH_PROVIDERS = ["google", "apple", "twitter", "discord"] as const;
+
+export const PROVIDER_CONFIG = {
+  twitter: { icon: "logo-twitter" as const, name: "Twitter", color: "#1DA1F2" },
+  google: { icon: "logo-google" as const, name: "Google", color: "#4285F4" },
+  discord: { icon: "logo-discord" as const, name: "Discord", color: "#5865F2" },
+  apple: { icon: "logo-apple" as const, name: "Apple", color: "#000000" },
+};
+```
 
 ### Step 4: Set Up the Provider
 
@@ -433,7 +427,8 @@ Wrap your app with the OpenfortProvider:
 
 ```typescript
 // App.tsx or your root component
-import { OpenfortProvider, OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } from "./lib/openfort";
+import { OpenfortProvider } from "@openfort/react-native";
+import { OPENFORT_CONFIG, WALLET_CONFIG, SUPPORTED_CHAINS } from "./config/openfort";
 
 export default function App() {
   return (
@@ -453,66 +448,79 @@ export default function App() {
 }
 ```
 
-### Step 5: Use the Services in Your Components
+### Step 5: Use the Hook in Your Components
 
 ```typescript
-// Example component
-import { useOpenfortAuth, useOpenfortUser, useOpenfortWallet } from "./lib/openfort";
+import { useOpenfort } from "@openfort/react-native";
 
 function MyComponent() {
-  const { signInWithOAuth } = useOpenfortAuth();
-  const { user } = useOpenfortUser();
-  const { wallets, createNewWallet } = useOpenfortWallet();
+  const { 
+    user, 
+    signInWithProvider, 
+    signUpGuest,
+    wallets, 
+    createWallet,
+    isAuthenticating,
+    isProviderLoading 
+  } = useOpenfort();
+
+  if (!user) {
+    return (
+      <View>
+        <Button onPress={() => signUpGuest()}>
+          Continue as Guest
+        </Button>
+        <Button 
+          onPress={() => signInWithProvider('google')}
+          disabled={isProviderLoading('google')}
+        >
+          {isProviderLoading('google') ? 'Loading...' : 'Sign in with Google'}
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View>
-      {!user ? (
-        <Button onPress={() => signInWithOAuth('google')}>
-          Sign in with Google
-        </Button>
-      ) : (
-        <View>
-          <Text>Welcome, {user.id}</Text>
-          <Button onPress={() => createNewWallet()}>
-            Create Wallet
-          </Button>
-        </View>
-      )}
+      <Text>Welcome, {user.id}</Text>
+      <Button onPress={() => createWallet()}>
+        Create Wallet
+      </Button>
+      {wallets?.map(wallet => (
+        <Text key={wallet.address}>Wallet: {wallet.address}</Text>
+      ))}
     </View>
   );
 }
 ```
 
-### Step 6: Customize Configuration
-
-Modify the configuration files based on your needs:
-
-1. **Update supported chains** in `config.ts`
-2. **Configure wallet recovery method** in `WALLET_CONFIG`
-3. **Add your OAuth providers** in `OAUTH_PROVIDERS`
-4. **Set up your encryption session logic** in `getEncryptionSession`
-
 ## Key Benefits of This Implementation
 
-1. **Modularity**: Each service is self-contained and focused on a specific domain
-2. **Type Safety**: Full TypeScript support with proper interfaces
-3. **Reusability**: Services can be used across multiple components
-4. **Maintainability**: Clear structure makes it easy to update and maintain
-5. **Testability**: Services can be easily mocked for testing
-6. **Documentation**: Clear interfaces and examples for easy understanding
+1. **Maximum Simplicity**: Direct use of the comprehensive hook eliminates abstraction layers
+2. **No Wrapper Code**: Components use the hook's API directly, reducing maintenance overhead
+3. **Type Safety**: Full TypeScript support with proper interfaces from the hook
+4. **Easy Reproduction**: Simply import the hook and use it in your components
+5. **Comprehensive**: Single hook provides all authentication, user, and wallet functionality
+6. **Efficient**: No duplicate state management or unnecessary re-renders
+7. **Clear Documentation**: Hook's built-in TypeScript definitions provide clear API guidance
 
 ## Additional Considerations
 
 ### Error Handling
 
-Each service provides error states and proper error handling:
+The hook provides specific error states for different operations:
 
 ```typescript
-const { authError } = useOpenfortAuth();
-const { userError } = useOpenfortUser();
+const { authError, userError, error } = useOpenfort();
 
 if (authError) {
   // Handle authentication errors
+}
+if (userError) {
+  // Handle user-related errors  
+}
+if (error) {
+  // Handle general SDK errors
 }
 ```
 
@@ -521,17 +529,17 @@ if (authError) {
 All async operations provide loading states:
 
 ```typescript
-const { isAuthenticating } = useOpenfortAuth();
-const { isCreatingWallet } = useOpenfortWallet();
+const { isAuthenticating, isCreatingWallet, isSwitchingChain, isProviderLoading } = useOpenfort();
 
-if (isAuthenticating) {
-  // Show loading spinner
+// Check specific provider loading
+if (isProviderLoading('google')) {
+  // Show Google-specific loading state
 }
 ```
 
-### Custom Configuration
+### Customization
 
-You can extend the configuration by modifying the config files:
+You can extend the configuration by modifying `config/openfort.ts`:
 
 ```typescript
 // Add new chains
@@ -540,9 +548,10 @@ export const SUPPORTED_CHAINS = [
   {
     id: 137,
     name: 'Polygon',
-    // ... chain config
+    nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+    rpcUrls: { default: { http: ['https://polygon-rpc.com'] } },
   }
-];
+] as const;
 
 // Add new OAuth providers
 export const PROVIDER_CONFIG = {
@@ -551,4 +560,4 @@ export const PROVIDER_CONFIG = {
 };
 ```
 
-This implementation provides a solid foundation for integrating Openfort SDK into any React Native application while maintaining clean, modular, and maintainable code.
+This implementation provides the cleanest and most straightforward way to integrate Openfort SDK into any React Native application while maintaining excellent developer experience and code maintainability.

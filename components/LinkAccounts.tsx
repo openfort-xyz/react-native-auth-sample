@@ -1,10 +1,10 @@
-import { OAUTH_PROVIDERS, PROVIDER_CONFIG, useOpenfortAuth, useOpenfortUser } from "@/lib/openfort";
+import { OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/config/openfort";
 import { Ionicons } from "@expo/vector-icons";
+import { useOpenfort } from "@openfort/react-native";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function LinkAccounts() {
-  const { linkOAuthAccount, isAuthenticating, isProviderLoading } = useOpenfortAuth();
-  const { user, isAccountLinked } = useOpenfortUser();
+  const { linkProvider, isAuthenticating, isProviderLoading, user, isProviderLinked } = useOpenfort();
 
   return (
     <View style={styles.sectionContainer}>
@@ -16,7 +16,7 @@ export default function LinkAccounts() {
         {OAUTH_PROVIDERS.map((provider) => {
           const config = PROVIDER_CONFIG[provider];
           const isThisLoading = isProviderLoading(provider);
-          const isLinked = isAccountLinked(provider);
+          const isLinked = isProviderLinked(provider);
           return (
             <TouchableOpacity
               key={provider}
@@ -24,7 +24,7 @@ export default function LinkAccounts() {
               onPress={async () => {
                 if (isLinked || isAuthenticating || isThisLoading) return;
                 try {
-                  await linkOAuthAccount(provider);
+                  await linkProvider(provider);
                 } catch (e) {
                   console.error("Error linking account:", e);
                 }

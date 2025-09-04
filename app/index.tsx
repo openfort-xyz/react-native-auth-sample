@@ -1,9 +1,9 @@
 import LoginScreen from '@/components/LoginScreen';
 import { UserScreen } from '@/components/UserScreen';
-import { useOpenfortUser } from '@/lib/openfort';
+import { useOpenfort } from '@openfort/react-native';
 
 export default function Index() {
-  const { user } = useOpenfortUser();
+  const { user } = useOpenfort();
 
   if (user === null) {
     console.warn('User not authenticated yet - showing login screen');
