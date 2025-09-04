@@ -4,7 +4,12 @@ import { useOpenfort } from '@openfort/react-native';
 
 export default function Index() {
   const { user } = useOpenfort();
-  console.log('User:', user);
+
+  if (user === null) {
+    console.warn('Tried to fetch user from Openfort. The user is not authenticated yet.');
+  } else {
+    console.log('Fetched user from Openfort:', user);
+  }
 
   return !user ? <LoginScreen /> : <UserScreen />;
   // return <UserScreen />
