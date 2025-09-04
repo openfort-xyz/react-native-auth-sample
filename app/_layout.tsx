@@ -14,6 +14,7 @@ export default function RootLayout() {
         shieldEncryptionKey: Constants.expoConfig?.extra?.openfortShieldEncryptionKey,
         // createEncryptedSessionEndpoint: "https://your-api.com/create-encrypted-session",
       }}
+      verbose={true}
       supportedChains={[
         {
           id: 84532,
