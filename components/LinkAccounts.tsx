@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { OAuthProvider, useOAuth } from "@openfort/react-native";
+import { OAuthProvider, useOAuth, useUser } from "@openfort/react-native";
+import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const providerConfig = {
@@ -11,6 +12,9 @@ const providerConfig = {
 
 export default function LinkAccounts() {
   const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
+  const [linkingProvider, setLinkingProvider] = useState<OAuthProvider | null>(null);
+  const { user } = useUser();
+  const linkedProviders = new Set((user?.linkedAccounts || []).map((acc: any) => acc.provider));
 
   return (
     <View style={styles.sectionContainer}>
@@ -21,23 +25,30 @@ export default function LinkAccounts() {
       <View style={styles.linkAccountsList}>
         {(["google", "apple", "twitter", "discord"] as const).map((provider) => {
           const config = providerConfig[provider];
+          const isThisLoading = linkingProvider === (provider as OAuthProvider);
+          const isLinked = linkedProviders.has(provider);
           return (
             <TouchableOpacity
               key={provider}
-              style={[styles.linkAccountButton, isOAuthLoading && styles.disabledButton]}
+              style={[styles.linkAccountButton, (isThisLoading || isLinked) && styles.disabledButton]}
               onPress={async () => {
-                if (isOAuthLoading) return;
+                if (isLinked || isOAuthLoading || linkingProvider) return;
                 try {
+                  setLinkingProvider(provider as OAuthProvider);
                   await linkOauth({ provider: provider as OAuthProvider });
                 } catch (e) {
                   console.error("Error linking account:", e);
+                } finally {
+                  setLinkingProvider(null);
                 }
               }}
-              disabled={isOAuthLoading}
+              disabled={isLinked || Boolean(linkingProvider) || isOAuthLoading}
               activeOpacity={0.7}
             >
               <Ionicons name={config.icon} size={20} color={config.color} />
-              <Text style={styles.linkAccountText}>Link {config.name}</Text>
+              <Text style={styles.linkAccountText}>
+                {isLinked ? `Linked with ${config.name}` : isThisLoading ? "Linking..." : `Link ${config.name}`}
+              </Text>
             </TouchableOpacity>
           );
         })}
