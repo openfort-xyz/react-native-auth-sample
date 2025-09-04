@@ -69,7 +69,10 @@ export default function WalletManagement() {
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}><Ionicons name="wallet" size={18} color="#1e293b" /> Wallet Management</Text>
+      <View style={styles.sectionTitleRow}>
+        <Ionicons name="wallet" size={18} color="#1e293b" />
+        <Text style={styles.sectionTitle}>Wallet Management</Text>
+      </View>
 
       {activeWallet?.address && (
         <View style={styles.currentWalletCard}>
@@ -178,11 +181,17 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingHorizontal: 24,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#1e293b',
-    marginBottom: 16,
+    marginBottom: 0,
   },
   sectionSubtitle: {
     fontSize: 14,

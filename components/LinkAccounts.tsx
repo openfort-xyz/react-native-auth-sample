@@ -14,7 +14,10 @@ export default function LinkAccounts() {
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}><Ionicons name="link" size={18} color="#1e293b" /> Link Accounts</Text>
+      <View style={styles.sectionTitleRow}>
+        <Ionicons name="link" size={18} color="#1e293b" />
+        <Text style={styles.sectionTitle}>Link Accounts</Text>
+      </View>
       <View style={styles.linkAccountsList}>
         {(["google", "apple", "twitter", "discord"] as const).map((provider) => {
           const config = providerConfig[provider];
@@ -48,11 +51,17 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingHorizontal: 24,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#1e293b',
-    marginBottom: 16,
+    marginBottom: 0,
   },
   linkAccountsList: {
     gap: 12,
