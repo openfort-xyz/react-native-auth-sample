@@ -1,17 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { OAuthProvider, useGuestAuth, useOAuth } from "@openfort/react-native";
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-const providerConfig = {
-  twitter: { icon: "logo-twitter" as const, name: "Twitter", color: "#1DA1F2" },
-  google: { icon: "logo-google" as const, name: "Google", color: "#4285F4" },
-  discord: { icon: "logo-discord" as const, name: "Discord", color: "#5865F2" },
-  apple: { icon: "logo-apple" as const, name: "Apple", color: "#000000" },
-};
+import { useOpenfortAuth, OAUTH_PROVIDERS, PROVIDER_CONFIG } from "@/lib/openfort";
 
 export default function LoginScreen() {
-  const { signUpGuest } = useGuestAuth()
-  const { initOAuth, error } = useOAuth();
+  const { signUpGuest, signInWithOAuth, isAuthenticating, authError } = useOpenfortAuth();
 
   return (
     <View style={styles.container}>
@@ -43,20 +35,21 @@ export default function LoginScreen() {
           <View style={styles.dividerLine} />
         </View>
 
-        {(["google", "apple", "twitter", "discord"] as const).map((provider) => {
-          const config = providerConfig[provider];
+        {OAUTH_PROVIDERS.map((provider) => {
+          const config = PROVIDER_CONFIG[provider];
           return (
             <TouchableOpacity
               key={provider}
               style={[styles.providerButton]}
               onPress={async () => {
                 try {
-                  await initOAuth({ provider: provider as OAuthProvider })
+                  await signInWithOAuth(provider)
                 } catch (error) {
                   console.error("Error logging in with OAuth:", error);
                 }
               }}
               activeOpacity={0.8}
+              disabled={isAuthenticating}
             >
               <View style={styles.providerButtonContent}>
                 <Ionicons name={config.icon} size={20} color={config.color} />
@@ -67,10 +60,10 @@ export default function LoginScreen() {
         })}
       </View>
 
-      {error && (
+      {authError && (
         <View style={styles.errorContainer}>
           <Ionicons name="warning" size={16} color="#dc2626" />
-          <Text style={styles.errorText}>{error.message}</Text>
+          <Text style={styles.errorText}>{authError.message}</Text>
         </View>
       )}
     </View>

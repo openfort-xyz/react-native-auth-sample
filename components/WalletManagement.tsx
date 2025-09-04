@@ -1,23 +1,18 @@
 import AppModal from "@/components/AppModal";
+import { CHAIN_CONFIG, useOpenfortWallet } from "@/lib/openfort";
 import { Ionicons } from "@expo/vector-icons";
-import { UserWallet, useWallets } from "@openfort/react-native";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const chainConfig = {
-  "84532": { name: "Base Sepolia", icon: "diamond" as const },
-  "11155111": { name: "Sepolia", icon: "diamond-outline" as const },
-};
-
 export default function WalletManagement() {
   const [chainId, setChainId] = useState("84532");
-  const [isSwitchingChain, setIsSwitchingChain] = useState(false);
+  // isSwitchingChain is now provided by the library hook
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState<string | undefined>(undefined);
   const [modalMessage, setModalMessage] = useState<string | undefined>(undefined);
   const [modalVariant, setModalVariant] = useState<"success" | "error" | "info">("info");
 
-  const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets();
+  const { wallets, setActiveWallet, createNewWallet, activeWallet, isCreatingWallet, signMessage, switchChain, isSwitchingChain } = useOpenfortWallet();
   const otherWallets = (wallets || []).filter((w) => w.address !== activeWallet?.address);
 
   const showModal = useCallback((opts: { title?: string; message?: string; variant?: "success" | "error" | "info" }) => {
@@ -27,44 +22,36 @@ export default function WalletManagement() {
     setModalVisible(true);
   }, []);
 
-  const signMessage = useCallback(
+  const handleSignMessage = useCallback(
     async () => {
       try {
         if (!activeWallet) {
           showModal({ title: "No Active Wallet", message: "Please select a wallet before signing.", variant: "info" });
           return;
         }
-        const provider = await activeWallet.getProvider();
-        const message = await provider.request({
-          method: "personal_sign",
-          params: [`0x0${Date.now()}`, activeWallet?.address],
-        });
-        if (message) {
-          showModal({ title: "Message Signed", message: String(message), variant: "success" });
+        const messageToSign = `0x0${Date.now()}`;
+        const signature = await signMessage(activeWallet, messageToSign);
+        if (signature) {
+          showModal({ title: "Message Signed", message: String(signature), variant: "success" });
         }
       } catch (e) {
         console.error(e);
       }
     },
-    [activeWallet, showModal]
+    [activeWallet, showModal, signMessage]
   );
 
-  const switchChain = useCallback(
-    async (wallet: UserWallet, id: string) => {
+  const handleSwitchChain = useCallback(
+    async (chainIdToSwitch: string) => {
       try {
-        setIsSwitchingChain(true);
-        const provider = await wallet.getProvider();
-        await provider.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x" + Number(id).toString(16) }],
-        });
-        showModal({ title: "Network Switched", message: `Chain switched to ${id} successfully`, variant: "success" });
+        if (!activeWallet) return;
+        await switchChain(activeWallet, chainIdToSwitch);
+        showModal({ title: "Network Switched", message: `Chain switched to ${chainIdToSwitch} successfully`, variant: "success" });
       } catch (e) {
         console.error(e);
       }
-      setIsSwitchingChain(false);
     },
-    [showModal]
+    [activeWallet, switchChain, showModal]
   );
 
   return (
@@ -86,9 +73,9 @@ export default function WalletManagement() {
             </View>
           </View>
           <View style={styles.chainInfo}>
-            <Ionicons name={chainConfig[chainId as keyof typeof chainConfig]?.icon} size={20} color="#16a34a" />
+            <Ionicons name={CHAIN_CONFIG[chainId as keyof typeof CHAIN_CONFIG]?.icon} size={20} color="#16a34a" />
             <Text style={styles.chainText}>
-              {isSwitchingChain ? "Switching..." : chainConfig[chainId as keyof typeof chainConfig]?.name}
+              {isSwitchingChain ? "Switching..." : CHAIN_CONFIG[chainId as keyof typeof CHAIN_CONFIG]?.name}
             </Text>
           </View>
           <View style={styles.activeActionsRow}>
@@ -96,17 +83,17 @@ export default function WalletManagement() {
               style={styles.actionChip}
               onPress={async () => {
                 const chainToSwitch = chainId === "11155111" ? "84532" : "11155111";
-                activeWallet && switchChain(activeWallet, chainToSwitch);
+                await handleSwitchChain(chainToSwitch);
                 setChainId(chainToSwitch);
               }}
               activeOpacity={0.8}
             >
               <Ionicons name="swap-horizontal" size={16} color="#374151" />
               <Text style={styles.actionChipText}>
-                Switch to {chainConfig[chainId === "11155111" ? "84532" : "11155111" as keyof typeof chainConfig]?.name}
+                Switch to {CHAIN_CONFIG[chainId === "11155111" ? "84532" : "11155111" as keyof typeof CHAIN_CONFIG]?.name}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionChip} onPress={() => signMessage()} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.actionChip} onPress={handleSignMessage} activeOpacity={0.8}>
               <Ionicons name="create" size={16} color="#374151" />
               <Text style={styles.actionChipText}>Sign Message</Text>
             </TouchableOpacity>
@@ -151,8 +138,8 @@ export default function WalletManagement() {
       </View>
 
       <TouchableOpacity
-        style={[styles.createWalletButton, isCreating && styles.disabledButton]}
-        onPress={() => createWallet({
+        style={[styles.createWalletButton, isCreatingWallet && styles.disabledButton]}
+        onPress={() => createNewWallet({
           onError: (error) => {
             console.error("Error creating wallet: " + error.message);
             showModal({
@@ -161,14 +148,14 @@ export default function WalletManagement() {
               variant: "error",
             });
           },
-          onSuccess: ({ wallet }) => { console.log("Wallet created successfully: " + wallet?.address); },
+          onSuccess: (wallet) => { console.log("Wallet created successfully: " + wallet?.address); },
         })}
-        disabled={isCreating}
+        disabled={isCreatingWallet}
         activeOpacity={0.8}
       >
         <Ionicons name="add" size={20} color="#3b82f6" />
         <Text style={styles.createWalletText}>
-          {isCreating ? "Creating Wallet..." : "Create New Wallet"}
+          {isCreatingWallet ? "Creating Wallet..." : "Create New Wallet"}
         </Text>
       </TouchableOpacity>
 

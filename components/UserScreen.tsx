@@ -2,7 +2,7 @@ import LinkAccounts from "@/components/LinkAccounts";
 import SignOutButton from "@/components/SignOutButton";
 import UserIdCard from "@/components/UserIdCard";
 import WalletManagement from "@/components/WalletManagement";
-import { useOpenfort, useUser } from "@openfort/react-native";
+import { useOpenfortUser } from "@/lib/openfort";
 import { useEffect } from "react";
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from "react-native";
 
@@ -11,22 +11,19 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from "react-nat
 // Wallet styles and logic have been extracted to `WalletManagement` component
 
 export const UserScreen = () => {
-  const { user } = useUser();
-  const { isReady: isOpenfortUserReady, error: errorInOpenfortUser } = useOpenfort();
-  
+  const { user, isUserReady, userError } = useOpenfortUser();
 
   useEffect(() => {
-    if (isOpenfortUserReady) {
-      console.log('User fetched from Openfort is ready.');
-    }
-    else {
-      console.warn('User fetched from Openfort is not ready.');
+    if (isUserReady) {
+      console.log('Openfort user service is ready');
+    } else {
+      console.warn('Openfort user service is not ready yet');
     }
   
-    if (errorInOpenfortUser) {
-      console.error('Error fetching user from Openfort:', errorInOpenfortUser);
+    if (userError) {
+      console.error('Error in Openfort user service:', userError);
     }
-  }, [isOpenfortUserReady, errorInOpenfortUser]);
+  }, [isUserReady, userError]);
 
   if (!user) {
     return null;

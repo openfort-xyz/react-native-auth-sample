@@ -1,15 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useOpenfort } from "@openfort/react-native";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useOpenfortAuth } from "@/lib/openfort";
 
 export default function SignOutButton() {
-  const { logout } = useOpenfort();
+  const { signOut } = useOpenfortAuth();
 
   return (
     <View style={styles.actionsContainer}>
       <TouchableOpacity
         style={styles.logoutButton}
-        onPress={logout}
+        onPress={signOut}
         activeOpacity={0.8}
       >
         <Ionicons name="log-out" size={18} color="#dc2626" />
