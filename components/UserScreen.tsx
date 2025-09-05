@@ -90,6 +90,10 @@ export const UserScreen = () => {
     }
   }, [isOpenfortUserReady, errorInOpenfortUser]);
 
+  const isLinked = (provider: 'twitter' | 'google' | 'discord' | 'apple') => {
+    return !!user?.linkedAccounts?.some((a: { provider: string }) => a.provider === provider);
+  };
+
   if (!user) {
     return null;
   }
@@ -98,14 +102,17 @@ export const UserScreen = () => {
     <ScrollView >
       <View style={{ display: "flex", flexDirection: "column", margin: 10 }}>
         {(["twitter", "google", "discord", "apple"] as const).map((provider) => {
-          const isLinked = !!user?.linkedAccounts?.some((a: { provider: string }) => a.provider === provider);
           return (
             <View key={provider}>
               <Button
-                title={isLinked ? `Linked with ${provider}` : (isOAuthLoading ? "Linking..." : `Link ${provider}`)}
-                disabled={isLinked || isOAuthLoading}
+                title={
+                  isLinked(provider) ? `Linked with ${provider}` :
+                  isOAuthLoading ? "Linking..." :
+                  `Link ${provider}`
+                }
+                disabled={isLinked(provider) || isOAuthLoading}
                 onPress={async () => {
-                  if (isLinked) return;
+                  if (isLinked(provider)) return;
                   try {
                     await linkOauth({ provider: provider as OAuthProvider })
                   } catch (e) {
