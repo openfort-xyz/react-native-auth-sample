@@ -11,7 +11,7 @@ export const UserScreen = () => {
   // const { signOut } = useSignOut();
   const { user } = useUser();
   const { isReady: isOpenfortUserReady, error: errorInOpenfortUser, logout: signOut } = useOpenfort();
-  const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
+  const { linkOauth, isLoading: isOAuthLoading } = useOAuth({ throwOnError: true });
 
   const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets({ throwOnError: true });
 
@@ -100,13 +100,14 @@ export const UserScreen = () => {
         {(["twitter", "google", "discord", "apple"] as const).map((provider) => (
           <View key={provider}>
             <Button
-              title={`Link ${provider}`}
+              title={isOAuthLoading ? "Linking..." : `Link ${provider}`}
               disabled={isOAuthLoading}
               onPress={async () => {
                 try {
                   await linkOauth({ provider: provider as OAuthProvider })
                 } catch (e) {
-                  console.error("Error linking account", e);
+                  const message = e instanceof Error ? e.message : String(e);
+                  Alert.alert("Linking error", message);
                 }
               }}
             ></Button>
