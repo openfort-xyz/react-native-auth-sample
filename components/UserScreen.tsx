@@ -1,26 +1,42 @@
 import { OAuthProvider, useOAuth, useOpenfort, UserWallet, useUser, useWallets } from "@openfort/react-native";
 import { useCallback, useEffect, useState } from "react";
-import { Button, ScrollView, Text, View } from "react-native";
+import { Alert, Button, ScrollView, Text, View } from "react-native";
 
 
 export const UserScreen = () => {
   const [chainId, setChainId] = useState("84532");
   const [isSwitchingChain, setIsSwitchingChain] = useState(false);
+  const [pendingWalletAddress, setPendingWalletAddress] = useState<UserWallet['address'] | null>(null);
 
   // const { signOut } = useSignOut();
   const { user } = useUser();
   const { isReady: isOpenfortUserReady, error: errorInOpenfortUser, logout: signOut } = useOpenfort();
   const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
 
-  const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets();
+  const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets({ throwOnError: true });
 
   // console.log("Embedded Wallets:", wallets, "Status:", status);
+
+  const handlePressWallet = useCallback(async (walletAddress: UserWallet['address']) => {
+    try {
+      setPendingWalletAddress(walletAddress);
+      await setActiveWallet({
+        address: walletAddress,
+        chainId: Number(chainId),
+      });
+      setPendingWalletAddress(null);
+      Alert.alert("Active wallet set", walletAddress);
+    } catch (error) {
+      setPendingWalletAddress(null);
+      console.error("Error setting active wallet", error);
+    }
+  }, [chainId, setActiveWallet]);
 
   const signMessage = useCallback(
     async () => {
       try {
         if (!activeWallet) {
-          alert("No active wallet selected");
+          Alert.alert("No active wallet selected");
           return;
         }
         console.log("Signing message with wallet:", activeWallet);
@@ -32,10 +48,10 @@ export const UserScreen = () => {
         });
         console.log("Message signed:", message);
         if (message) {
-          alert("Message signed successfully: " + message);
+          Alert.alert("Message signed successfully", String(message));
         }
       } catch (e) {
-        console.error(e);
+        console.error("Error signing message", e);
       }
     },
     [activeWallet]
@@ -52,9 +68,9 @@ export const UserScreen = () => {
           method: "wallet_switchEthereumChain",
           params: [{ chainId: "0x" + Number(id).toString(16) }],
         });
-        alert(`Chain switched to ${id} successfully`);
+        Alert.alert("Chain switched", `Switched to ${id} successfully`);
       } catch (e) {
-        console.error(e);
+        console.error("Error switching chain", e);
       }
       setIsSwitchingChain(false);
     },
@@ -90,7 +106,7 @@ export const UserScreen = () => {
                 try {
                   await linkOauth({ provider: provider as OAuthProvider })
                 } catch (e) {
-                  console.error("Error linking account:", e);
+                  console.error("Error linking account", e);
                 }
               }}
             ></Button>
@@ -148,17 +164,8 @@ export const UserScreen = () => {
                   <View key={w.address + i} style={{ display: "flex", flexDirection: "row", gap: 5, alignItems: "center" }}>
                     <Button
                       title={`${w.address.slice(0, 6)}...${w.address.slice(-4)}`}
-                      disabled={activeWallet?.address === w.address}
-                      onPress={() => setActiveWallet({
-                        address: w.address,
-                        chainId: Number(chainId),
-                        onSuccess: () => {
-                          alert("Active wallet set to: " + w.address);
-                        },
-                        onError: (error) => {
-                          alert("Error setting active wallet: " + error.message);
-                        }
-                      })}
+                      disabled={activeWallet?.address === w.address || pendingWalletAddress === w.address}
+                      onPress={() => handlePressWallet(w.address)}
                     />
 
                     {
@@ -176,10 +183,10 @@ export const UserScreen = () => {
               disabled={isCreating}
               onPress={() => createWallet({
                 onError: (error) => {
-                  alert("Error creating wallet: " + error.message);
+                  console.error("Error creating wallet", error);
                 },
                 onSuccess: ({ wallet }) => {
-                  alert("Wallet created successfully: " + wallet?.address);
+                  Alert.alert("Wallet created", wallet?.address || "");
                 },
               })} />
 
