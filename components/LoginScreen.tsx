@@ -1,9 +1,16 @@
 import { OAuthProvider, useGuestAuth, useOAuth } from "@openfort/react-native";
+import { useEffect } from "react";
 import { Button, Text, View } from "react-native";
 
 export default function LoginScreen() {
   const { signUpGuest } = useGuestAuth()
   const { initOAuth, error } = useOAuth();
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error logging in with OAuth:", error);
+    }
+  }, [error]);
 
   return (
     <View
@@ -16,12 +23,6 @@ export default function LoginScreen() {
       }}
     >
       <Text style={{ fontSize: 20, fontWeight: "bold" }}>Openfort Expo Example</Text>
-      {/* <Text style={{ fontSize: 10 }}>{Application.applicationId}</Text>
-      <Text style={{ fontSize: 10 }}>
-        {Application.applicationId === "host.exp.Exponent"
-          ? "exp"
-          : Constants.expoConfig?.scheme}
-      </Text> */}
 
       <Button
         title="Login as Guest"
@@ -49,7 +50,6 @@ export default function LoginScreen() {
           </View>
         ))}
       </View>
-      {error && <Text style={{ color: "red" }}>Error: {error.message}</Text>}
     </View>
   );
 }
