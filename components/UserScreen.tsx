@@ -97,22 +97,26 @@ export const UserScreen = () => {
   return (
     <ScrollView >
       <View style={{ display: "flex", flexDirection: "column", margin: 10 }}>
-        {(["twitter", "google", "discord", "apple"] as const).map((provider) => (
-          <View key={provider}>
-            <Button
-              title={isOAuthLoading ? "Linking..." : `Link ${provider}`}
-              disabled={isOAuthLoading}
-              onPress={async () => {
-                try {
-                  await linkOauth({ provider: provider as OAuthProvider })
-                } catch (e) {
-                  const message = e instanceof Error ? e.message : String(e);
-                  Alert.alert("Linking error", message);
-                }
-              }}
-            ></Button>
-          </View>
-        ))}
+        {(["twitter", "google", "discord", "apple"] as const).map((provider) => {
+          const isLinked = !!user?.linkedAccounts?.some((a: { provider: string }) => a.provider === provider);
+          return (
+            <View key={provider}>
+              <Button
+                title={isLinked ? `Linked with ${provider}` : (isOAuthLoading ? "Linking..." : `Link ${provider}`)}
+                disabled={isLinked || isOAuthLoading}
+                onPress={async () => {
+                  if (isLinked) return;
+                  try {
+                    await linkOauth({ provider: provider as OAuthProvider })
+                  } catch (e) {
+                    const message = e instanceof Error ? e.message : String(e);
+                    Alert.alert("Linking error", message);
+                  }
+                }}
+              ></Button>
+            </View>
+          );
+        })}
       </View>
 
       <View style={{ borderColor: "rgba(0,0,0,0.1)", borderWidth: 1 }}>
