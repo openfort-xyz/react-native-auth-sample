@@ -94,6 +94,35 @@ export const UserScreen = () => {
     return !!user?.linkedAccounts?.some((a: { provider: string }) => a.provider === provider);
   };
 
+  const handleLinkProvider = useCallback(async (provider: 'twitter' | 'google' | 'discord' | 'apple') => {
+    if (isLinked(provider)) return;
+    try {
+      await linkOauth({ provider: provider as OAuthProvider });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      Alert.alert("Linking error", message);
+    }
+  }, [user, linkOauth]);
+
+  const handleCreateWallet = useCallback(() => {
+    createWallet({
+      onError: (error) => {
+        console.error("Error creating wallet", error);
+      },
+      onSuccess: ({ wallet }) => {
+        Alert.alert("Wallet created", wallet?.address || "");
+      },
+    })
+  }, [createWallet]);
+
+  const handleSwitchChain = useCallback(async () => {
+    const chainToSwitch = chainId === "11155111" ? "84532" : "11155111";
+    if (activeWallet) {
+      await switchChain(activeWallet, chainToSwitch);
+    }
+    setChainId(chainToSwitch)
+  }, [chainId, activeWallet, switchChain]);
+
   if (!user) {
     return null;
   }
@@ -111,15 +140,7 @@ export const UserScreen = () => {
                   `Link ${provider}`
                 }
                 disabled={isLinked(provider) || isOAuthLoading}
-                onPress={async () => {
-                  if (isLinked(provider)) return;
-                  try {
-                    await linkOauth({ provider: provider as OAuthProvider })
-                  } catch (e) {
-                    const message = e instanceof Error ? e.message : String(e);
-                    Alert.alert("Linking error", message);
-                  }
-                }}
+                onPress={() => handleLinkProvider(provider)}
               ></Button>
             </View>
           );
@@ -193,24 +214,13 @@ export const UserScreen = () => {
             <Button
               title={isCreating ? "Creating Wallet..." : "Create Wallet"}
               disabled={isCreating}
-              onPress={() => createWallet({
-                onError: (error) => {
-                  console.error("Error creating wallet", error);
-                },
-                onSuccess: ({ wallet }) => {
-                  Alert.alert("Wallet created", wallet?.address || "");
-                },
-              })} />
+              onPress={handleCreateWallet} />
 
             <>
               <Text>Chain ID: {isSwitchingChain ? "Switching..." : chainId}</Text>
               <Button
                 title={`Switch to ${chainId === "11155111" ? "84532" : "11155111"}`}
-                onPress={async () => {
-                  const chainToSwitch = chainId === "11155111" ? "84532" : "11155111";
-                  activeWallet && switchChain(activeWallet, chainToSwitch)
-                  setChainId(chainToSwitch)
-                }}
+                onPress={handleSwitchChain}
               />
             </>
           </View>
