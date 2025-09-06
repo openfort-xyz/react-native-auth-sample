@@ -1,4 +1,4 @@
-import { OpenfortProvider, RecoveryMethod } from "@openfort/react-native";
+import { OpenfortProvider } from "@openfort/react-native";
 import Constants from "expo-constants";
 import { Stack } from "expo-router";
 export default function RootLayout() {
@@ -7,12 +7,15 @@ export default function RootLayout() {
     <OpenfortProvider
       publishableKey={Constants.expoConfig?.extra?.openfortPublishableKey}
       walletConfig={{
-        recoveryMethod: RecoveryMethod.PASSWORD,
         debug: false,
         ethereumProviderPolicyId: undefined, // replace with your gas sponsorship policy
         shieldPublishableKey: Constants.expoConfig?.extra?.openfortShieldPublishableKey,
-        shieldEncryptionKey: Constants.expoConfig?.extra?.openfortShieldEncryptionKey,
-        // createEncryptedSessionEndpoint: "https://your-api.com/create-encrypted-session",
+        // If you want to use AUTOMATIC embedded wallet recovery, an encryption session is required.
+        // https://www.openfort.io/docs/products/embedded-wallet/javascript/signer/recovery#automatic-recovery.
+        // getEncryptionSession: async () => {
+        //   // fetch the encryption session from your backend
+        //   return "ENCRYPTION_SESSION"
+        // }
       }}
       verbose={true}
       supportedChains={[

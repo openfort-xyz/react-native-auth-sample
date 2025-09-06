@@ -14,8 +14,6 @@ export const UserScreen = () => {
 
   const { wallets, setActiveWallet, createWallet, activeWallet, isCreating } = useWallets();
 
-  // console.log("Embedded Wallets:", wallets, "Status:", status);
-
   const signMessage = useCallback(
     async () => {
       try {
@@ -175,6 +173,7 @@ export const UserScreen = () => {
               title={isCreating ? "Creating Wallet..." : "Create Wallet"}
               disabled={isCreating}
               onPress={() => createWallet({
+                recoveryPassword: "test-password",
                 onError: (error) => {
                   alert("Error creating wallet: " + error.message);
                 },
