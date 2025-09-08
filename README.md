@@ -23,8 +23,6 @@ Check the full guide [in the documentation](https://www.openfort.io/docs/product
     "extra": {
       "openfortPublishableKey": "<your-openfort-publishable-key>",
       "openfortShieldPublishableKey": "<your-shield-publishable-key>",
-      // the encryption key should only be hardcoded and used in the client when using password/passkey based recovery methods.
-      "openfortShieldEncryptionKey": "<your-shield-encryption-key>"
     }
    ...
    ```
