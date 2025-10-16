@@ -150,6 +150,7 @@ export const UserScreen = () => {
                       onPress={() => setActiveWallet({
                         address: w.address,
                         chainId: Number(chainId),
+                        recoveryPassword: "test-password",
                         onSuccess: () => {
                           alert("Active wallet set to: " + w.address);
                         },
