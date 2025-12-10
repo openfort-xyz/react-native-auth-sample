@@ -31,8 +31,8 @@
       "favicon": "./assets/images/favicon.png"
     },
     "extra": {
-      "openfortPublishableKey": "pk_test_af122dce-279e-5d50-ada1-bdcbf2fc671c",
-      "openfortShieldPublishableKey": "8415deef-9fd5-4b6a-8010-889aa513fbec"
+      "openfortPublishableKey": "pk_test_bc3f58b0-fb61-5829-abaa-26ab039179ae",
+      "openfortShieldPublishableKey": "a4b75269-65e7-49c4-a600-6b5d9d6eec66"
     },
     "plugins": [
       "expo-router",
