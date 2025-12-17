@@ -11,11 +11,15 @@ export default function RootLayout() {
         ethereumProviderPolicyId: undefined, // replace with your gas sponsorship policy
         shieldPublishableKey: Constants.expoConfig?.extra?.openfortShieldPublishableKey,
         // If you want to use AUTOMATIC embedded wallet recovery, an encryption session is required.
-        // https://www.openfort.io/docs/products/embedded-wallet/javascript/signer/recovery#automatic-recovery.
-        // getEncryptionSession: async () => {
-        //   // fetch the encryption session from your backend
-        //   return "ENCRYPTION_SESSION"
-        // }
+        getEncryptionSession: async () => {
+              const res = await fetch('/api/protected-create-encryption-session', {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+              return (await res.json()).session;
+        }
       }}
       verbose={true}
       supportedChains={[

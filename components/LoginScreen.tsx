@@ -1,7 +1,7 @@
 import {
-  type OAuthProvider,
-  useGuestAuth,
-  useOAuth,
+	type OAuthProvider,
+	useGuestAuth,
+	useOAuth,
 } from "@openfort/react-native";
 import { Button, Text, View } from "react-native";
 
