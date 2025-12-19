@@ -3,6 +3,8 @@ import {
 	useGuestAuth,
 	useOAuth,
 } from "@openfort/react-native";
+import * as Application from "expo-application";
+import Constants from "expo-constants";
 import { Button, Text, View } from "react-native";
 
 export default function LoginScreen() {
@@ -23,12 +25,12 @@ export default function LoginScreen() {
 			<Text style={{ fontSize: 20, fontWeight: "bold" }}>
 				Openfort Expo Example
 			</Text>
-			{/* <Text style={{ fontSize: 10 }}>{Application.applicationId}</Text>
-      <Text style={{ fontSize: 10 }}>
-        {Application.applicationId === "host.exp.Exponent"
-          ? "exp"
-          : Constants.expoConfig?.scheme}
-      </Text> */}
+			<Text style={{ fontSize: 10 }}>{Application.applicationId}</Text>
+			<Text style={{ fontSize: 10 }}>
+				{Application.applicationId === "host.exp.Exponent"
+					? "exp"
+					: Constants.expoConfig?.scheme}
+			</Text>
 
 			<Button title="Login as Guest" onPress={() => signUpGuest()} />
 

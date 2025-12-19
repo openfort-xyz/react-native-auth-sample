@@ -1,4 +1,4 @@
-import { OpenfortProvider } from "@openfort/react-native";
+import { AccountTypeEnum, OpenfortProvider } from "@openfort/react-native";
 import Constants from "expo-constants";
 import { Stack } from "expo-router";
 export default function RootLayout() {
@@ -8,6 +8,7 @@ export default function RootLayout() {
       publishableKey={Constants.expoConfig?.extra?.openfortPublishableKey}
       walletConfig={{
         debug: false,
+        accountType: AccountTypeEnum.SMART_ACCOUNT, // or EOA or DELEGATED 
         ethereumProviderPolicyId: undefined, // replace with your gas sponsorship policy
         shieldPublishableKey: Constants.expoConfig?.extra?.openfortShieldPublishableKey,
         // If you want to use AUTOMATIC embedded wallet recovery, an encryption session is required.
