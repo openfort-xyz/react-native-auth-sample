@@ -1,10 +1,10 @@
 import {
-  type OAuthProvider,
-  type UserWallet,
-  useEmbeddedEthereumWallet,
-  useOAuth,
-  useSignOut,
-  useUser
+	type ConnectedEmbeddedEthereumWallet,
+	type OAuthProvider,
+	useEmbeddedEthereumWallet,
+	useOAuth,
+	useSignOut,
+	useUser,
 } from "@openfort/react-native";
 import { useCallback, useState } from "react";
 import { Button, ScrollView, Text, View } from "react-native";
@@ -45,22 +45,25 @@ export const UserScreen = () => {
 		}
 	}, [activeWallet]);
 
-	const switchChain = useCallback(async (wallet: UserWallet, id: string) => {
-		try {
-			setIsSwitchingChain(true);
-			console.log("Signing message with wallet:", wallet);
-			const provider = await wallet.getProvider();
-			console.log("Provider:", provider);
-			await provider.request({
-				method: "wallet_switchEthereumChain",
-				params: [{ chainId: "0x" + Number(id).toString(16) }],
-			});
-			alert(`Chain switched to ${id} successfully`);
-		} catch (e) {
-			console.error(e);
-		}
-		setIsSwitchingChain(false);
-	}, []);
+	const switchChain = useCallback(
+		async (wallet: ConnectedEmbeddedEthereumWallet, id: string) => {
+			try {
+				setIsSwitchingChain(true);
+				console.log("Signing message with wallet:", wallet);
+				const provider = await wallet.getProvider();
+				console.log("Provider:", provider);
+				await provider.request({
+					method: "wallet_switchEthereumChain",
+					params: [{ chainId: "0x" + Number(id).toString(16) }],
+				});
+				alert(`Chain switched to ${id} successfully`);
+			} catch (e) {
+				console.error(e);
+			}
+			setIsSwitchingChain(false);
+		},
+		[],
+	);
 
 	if (!user) {
 		return null;
@@ -102,26 +105,6 @@ export const UserScreen = () => {
 						<Text>{user.id}</Text>
 					</View>
 
-					{/* <View>
-            <Text style={{ fontWeight: "bold" }}>Linked accounts</Text>
-            {user?.linkedAccounts.length ? (
-              <View style={{ display: "flex", flexDirection: "column" }}>
-                {user?.linkedAccounts?.map((m) => (
-                  <Text
-                    key={m.verified_at}
-                    style={{
-                      color: "rgba(0,0,0,0.5)",
-                      fontSize: 12,
-                      fontStyle: "italic",
-                    }}
-                  >
-                    {m.type}: {toMainIdentifier(m)}
-                  </Text>
-                ))}
-              </View>
-            ) : null}
-          </View> */}
-
 					<View>
 						{/* <Text style={{ fontWeight: "bold" }}>{`Embedded Wallet: ${activeWallet?.address || "disconnected"}`}</Text> */}
 						{activeWallet?.address && (
@@ -148,26 +131,24 @@ export const UserScreen = () => {
 									title={`${w.address.slice(0, 6)}...${w.address.slice(-4)}`}
 									disabled={activeWallet?.address === w.address}
 									onPress={() => {
-                      setConnectingWalletAddress(w.address);
-                      setActive({
-                        address: w.address,
-                        chainId: Number(chainId),
-                        recoveryPassword: "test-password",
-                        onSuccess: () => {
-                          setConnectingWalletAddress(null);
-                          alert(`Active wallet set to: ${w.address}`);
-                        },
-                        onError: (error) => {
-                          setConnectingWalletAddress(null);
-                          alert(`Error setting active wallet: ${error.message}`);
-                        },
-                      })
-                    }
-									}
+										setConnectingWalletAddress(w.address);
+										setActive({
+											address: w.address,
+											chainId: Number(chainId),
+											onSuccess: () => {
+												setConnectingWalletAddress(null);
+												alert(`Active wallet set to: ${w.address}`);
+											},
+											onError: (error) => {
+												setConnectingWalletAddress(null);
+												alert(`Error setting active wallet: ${error.message}`);
+											},
+										});
+									}}
 								/>
 
-                  {status === "connecting" &&
-									  connectingWalletAddress === w.address && (
+								{status === "connecting" &&
+									connectingWalletAddress === w.address && (
 										<Text
 											style={{
 												color: "rgba(0,0,0,0.5)",
@@ -181,11 +162,12 @@ export const UserScreen = () => {
 							</View>
 						))}
 						<Button
-							title={status === "creating" ? "Creating Wallet..." : "Create Wallet"}
+							title={
+								status === "creating" ? "Creating Wallet..." : "Create Wallet"
+							}
 							disabled={status === "creating"}
 							onPress={() =>
 								create({
-									recoveryPassword: "test-password",
 									onError: (error) => {
 										alert("Error creating wallet: " + error.message);
 									},
@@ -196,20 +178,16 @@ export const UserScreen = () => {
 							}
 						/>
 
-						<>
-							<Text>
-								Chain ID: {isSwitchingChain ? "Switching..." : chainId}
-							</Text>
-							<Button
-								title={`Switch to ${chainId === "11155111" ? "84532" : "11155111"}`}
-								onPress={async () => {
-									const chainToSwitch =
-										chainId === "11155111" ? "84532" : "11155111";
-									activeWallet && switchChain(activeWallet, chainToSwitch);
-									setChainId(chainToSwitch);
-								}}
-							/>
-						</>
+						<Text>Chain ID: {isSwitchingChain ? "Switching..." : chainId}</Text>
+						<Button
+							title={`Switch to ${chainId === "11155111" ? "84532" : "11155111"}`}
+							onPress={async () => {
+								const chainToSwitch =
+									chainId === "11155111" ? "84532" : "11155111";
+								activeWallet && switchChain(activeWallet, chainToSwitch);
+								setChainId(chainToSwitch);
+							}}
+						/>
 					</View>
 
 					<View style={{ display: "flex", flexDirection: "column" }}>
