@@ -1,16 +1,18 @@
 import {
-	type OAuthProvider,
-	useGuestAuth,
-	useOAuth,
+  type OAuthProvider,
+  useGuestAuth,
+  useOAuth,
 } from "@openfort/react-native";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import { Button, Text, View } from "react-native";
 
 export default function LoginScreen() {
-	const { signUpGuest, error: guestError } = useGuestAuth();
-	console.log("guestError", guestError);
+	const { signUpGuest } = useGuestAuth();
 	const { initOAuth, error } = useOAuth();
+
+	const navigation = useRouter();
 
 	return (
 		<View
@@ -33,6 +35,18 @@ export default function LoginScreen() {
 			</Text>
 
 			<Button title="Login as Guest" onPress={() => signUpGuest()} />
+			<Button
+				title="Email Password"
+				onPress={() => navigation.push("/(auth)/email-password")}
+			/>
+			<Button
+				title="Email OTP"
+				onPress={() => navigation.push("/(auth)/email-otp")}
+			/>
+			<Button
+				title="Phone OTP"
+				onPress={() => navigation.push("/(auth)/phone-otp")}
+			/>
 
 			<View
 				style={{ display: "flex", flexDirection: "column", gap: 5, margin: 10 }}
