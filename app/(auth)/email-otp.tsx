@@ -1,4 +1,4 @@
-import { useOpenfortClient } from "@openfort/react-native";
+import { useEmailAuthOtp } from "@openfort/react-native";
 import { useState } from "react";
 import { Button, TextInput, View } from "react-native";
 
@@ -6,11 +6,11 @@ export default function Index() {
 	const [hasSentOtp, setHasSentOtp] = useState(false);
 	const [email, setEmail] = useState("");
 	const [otp, setOtp] = useState("");
+	const { requestEmailOtp, signInEmailOtp } = useEmailAuthOtp();
 
-	const client = useOpenfortClient();
 	const handleSendOtp = async () => {
 		try {
-			await client.auth.requestEmailOtp({
+			await requestEmailOtp({
 				email,
 			});
 
@@ -60,7 +60,7 @@ export default function Index() {
 						title="Verify OTP"
 						onPress={async () => {
 							try {
-								const response = await client.auth.logInWithEmailOtp({
+								const response = await signInEmailOtp({
 									email,
 									otp,
 								});
