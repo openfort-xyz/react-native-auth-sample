@@ -117,9 +117,9 @@ export const UserScreen = () => {
 						<Text style={{ fontWeight: "bold", marginTop: 20, fontSize: 16 }}>
 							Available Wallets
 						</Text>
-						{wallets.map((w, i) => (
+						{wallets.map((w) => (
 							<View
-								key={w.address + i}
+								key={w.address}
 								style={{
 									display: "flex",
 									flexDirection: "row",
@@ -133,7 +133,7 @@ export const UserScreen = () => {
 									onPress={() => {
 										setConnectingWalletAddress(w.address);
 										setActive({
-											address: w.address,
+											address: w.address as `0x${string}`,
 											chainId: Number(chainId),
 											onSuccess: () => {
 												setConnectingWalletAddress(null);
@@ -193,7 +193,7 @@ export const UserScreen = () => {
 					<View style={{ display: "flex", flexDirection: "column" }}>
 						<Button title="Sign Message" onPress={async () => signMessage()} />
 					</View>
-					<Button title="Logout" onPress={signOut} />
+					<Button title="Logout" onPress={() => signOut()} />
 				</View>
 			</View>
 		</ScrollView>

@@ -1,7 +1,7 @@
 import {
-  type OAuthProvider,
-  useGuestAuth,
-  useOAuth,
+	type OAuthProvider,
+	useGuestAuth,
+	useOAuth
 } from "@openfort/react-native";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
@@ -47,6 +47,7 @@ export default function LoginScreen() {
 				title="Phone OTP"
 				onPress={() => navigation.push("/(auth)/phone-otp")}
 			/>
+			<Button title="Siwe" onPress={() => navigation.push("/(auth)/siwe")} />
 
 			<View
 				style={{ display: "flex", flexDirection: "column", gap: 5, margin: 10 }}
