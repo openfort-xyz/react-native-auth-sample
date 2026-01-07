@@ -15,8 +15,8 @@ importers:
         specifier: ^15.0.3
         version: 15.0.3(expo-font@14.0.10(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@openfort/react-native':
-        specifier: file:./openfort-react-native-0.1.23.10.tgz
-        version: file:openfort-react-native-0.1.23.10.tgz(expo-apple-authentication@8.0.8(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(expo-application@7.0.8(expo@54.0.27))(expo-crypto@15.0.8(expo@54.0.27))(expo-linking@8.0.10)(expo-secure-store@15.0.8(expo@54.0.27))(expo-web-browser@15.0.10(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+        specifier: file:./openfort-react-native-0.1.23.11.tgz
+        version: file:openfort-react-native-0.1.23.11.tgz(expo-apple-authentication@8.0.8(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(expo-application@7.0.8(expo@54.0.27))(expo-crypto@15.0.8(expo@54.0.27))(expo-linking@8.0.10)(expo-secure-store@15.0.8(expo@54.0.27))(expo-web-browser@15.0.10(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@react-native-async-storage/async-storage':
         specifier: 2.2.0
         version: 2.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
@@ -1070,8 +1070,8 @@ packages:
     resolution: {integrity: sha512-URLBqJNsmsegQrZ9T/G5fi/YqFs+c4J++xzwLFDvGOru46ZTuubpayNuKrhLN+O1T8JhETr7+cIp85HNhZ0ksA==, tarball: file:openfort-openfort-js-0.10.36-beta.3.5.tgz}
     version: 0.10.36-beta.3
 
-  '@openfort/react-native@file:openfort-react-native-0.1.23.10.tgz':
-    resolution: {integrity: sha512-u211Amq41LoR7xECOpU/iF+tiyyVXtKs/bJXOlr86PcdDfwPQZNFVnG7TOgl6taXCzFvXVokfTIfcbF60pf/pw==, tarball: file:openfort-react-native-0.1.23.10.tgz}
+  '@openfort/react-native@file:openfort-react-native-0.1.23.11.tgz':
+    resolution: {integrity: sha512-WMDCgfw+3/LCZhZq6mOfxJQxRl59k3dX5qn+dzEzTJ3JAeS2gR2fivAuESuvTeLpXIbYx701YG08qy3+xVgH8w==, tarball: file:openfort-react-native-0.1.23.11.tgz}
     version: 0.1.23
     peerDependencies:
       expo-apple-authentication: '*'
@@ -6327,7 +6327,7 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@openfort/react-native@file:openfort-react-native-0.1.23.10.tgz(expo-apple-authentication@8.0.8(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(expo-application@7.0.8(expo@54.0.27))(expo-crypto@15.0.8(expo@54.0.27))(expo-linking@8.0.10)(expo-secure-store@15.0.8(expo@54.0.27))(expo-web-browser@15.0.10(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+  '@openfort/react-native@file:openfort-react-native-0.1.23.11.tgz(expo-apple-authentication@8.0.8(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(expo-application@7.0.8(expo@54.0.27))(expo-crypto@15.0.8(expo@54.0.27))(expo-linking@8.0.10)(expo-secure-store@15.0.8(expo@54.0.27))(expo-web-browser@15.0.10(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@openfort/openfort-js': file:openfort-openfort-js-0.10.36-beta.3.5.tgz
       expo-apple-authentication: 8.0.8(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
