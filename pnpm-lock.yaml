@@ -1000,8 +1000,8 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@openfort/openfort-js@https://pkg.pr.new/@openfort/openfort-js@160':
-    resolution: {tarball: https://pkg.pr.new/@openfort/openfort-js@160}
+  '@openfort/openfort-js@https://pkg.pr.new/@openfort/openfort-js@134be41':
+    resolution: {tarball: https://pkg.pr.new/@openfort/openfort-js@134be41}
     version: 0.10.36-beta.3
 
   '@openfort/react-native@https://pkg.pr.new/openfort-xyz/react-native/@openfort/react-native@39':
@@ -6103,7 +6103,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@openfort/openfort-js@https://pkg.pr.new/@openfort/openfort-js@160':
+  '@openfort/openfort-js@https://pkg.pr.new/@openfort/openfort-js@134be41':
     dependencies:
       '@ethersproject/abi': 5.8.0
       '@ethersproject/bytes': 5.8.0
@@ -6125,7 +6125,7 @@ snapshots:
 
   '@openfort/react-native@https://pkg.pr.new/openfort-xyz/react-native/@openfort/react-native@39(expo-apple-authentication@8.0.8(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(expo-application@7.0.8(expo@54.0.27))(expo-crypto@15.0.8(expo@54.0.27))(expo-linking@8.0.10)(expo-secure-store@15.0.8(expo@54.0.27))(expo-web-browser@15.0.10(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@openfort/openfort-js': https://pkg.pr.new/@openfort/openfort-js@160
+      '@openfort/openfort-js': https://pkg.pr.new/@openfort/openfort-js@134be41
       expo-apple-authentication: 8.0.8(expo@54.0.27)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
       expo-application: 7.0.8(expo@54.0.27)
       expo-crypto: 15.0.8(expo@54.0.27)
