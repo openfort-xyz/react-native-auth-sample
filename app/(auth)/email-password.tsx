@@ -1,4 +1,5 @@
 import { useEmailAuth } from "@openfort/react-native";
+import { createURL } from "expo-linking";
 import { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
 
@@ -11,10 +12,11 @@ export default function Index() {
 
 	const signUp = async () => {
 		try {
+			console.log("Signing up with email:", email);
 			await signUpEmail({
 				email,
 				password,
-				// emailVerificationRedirectTo: "myapp://",
+				emailVerificationRedirectTo: createURL(""),
 				name: "Marti Expo",
 			});
 			setHasSignedUp(true);
