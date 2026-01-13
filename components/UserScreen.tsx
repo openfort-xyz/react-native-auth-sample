@@ -3,15 +3,18 @@ import {
 	type OAuthProvider,
 	useEmbeddedEthereumWallet,
 	useOAuth,
+	useOpenfortClient,
 	useSignOut,
 	useUser,
 } from "@openfort/react-native";
+import { createURL } from "expo-linking";
 import { useCallback, useState } from "react";
-import { Button, ScrollView, Text, View } from "react-native";
+import { Button, ScrollView, Text, TextInput, View } from "react-native";
 
 export const UserScreen = () => {
 	const [chainId, setChainId] = useState("84532");
 	const [isSwitchingChain, setIsSwitchingChain] = useState(false);
+	const client = useOpenfortClient();
 
 	const { signOut } = useSignOut();
 	const { user } = useUser();
@@ -65,6 +68,8 @@ export const UserScreen = () => {
 		[],
 	);
 
+	const [email, setEmail] = useState("");
+
 	if (!user) {
 		return null;
 	}
@@ -88,6 +93,36 @@ export const UserScreen = () => {
 							></Button>
 						</View>
 					),
+				)}
+				{!user.email && (
+					<>
+						<TextInput
+							placeholder="Enter your email"
+							style={{
+								height: 40,
+								borderColor: "gray",
+								borderWidth: 1,
+								width: "100%",
+								paddingHorizontal: 10,
+							}}
+							onChangeText={setEmail}
+							value={email}
+						/>
+						<Button
+							title={`Link Email`}
+							disabled={isOAuthLoading}
+							onPress={async () => {
+								try {
+									await client.auth.addEmail({
+										email,
+										callbackURL: createURL(""),
+									});
+								} catch (e) {
+									console.error("Error linking account:", e);
+								}
+							}}
+						></Button>
+					</>
 				)}
 			</View>
 
@@ -117,9 +152,9 @@ export const UserScreen = () => {
 						<Text style={{ fontWeight: "bold", marginTop: 20, fontSize: 16 }}>
 							Available Wallets
 						</Text>
-						{wallets.map((w, i) => (
+						{wallets.map((w) => (
 							<View
-								key={w.address + i}
+								key={w.address}
 								style={{
 									display: "flex",
 									flexDirection: "row",
@@ -133,7 +168,7 @@ export const UserScreen = () => {
 									onPress={() => {
 										setConnectingWalletAddress(w.address);
 										setActive({
-											address: w.address,
+											address: w.address as `0x${string}`,
 											chainId: Number(chainId),
 											onSuccess: () => {
 												setConnectingWalletAddress(null);
@@ -193,7 +228,7 @@ export const UserScreen = () => {
 					<View style={{ display: "flex", flexDirection: "column" }}>
 						<Button title="Sign Message" onPress={async () => signMessage()} />
 					</View>
-					<Button title="Logout" onPress={signOut} />
+					<Button title="Logout" onPress={() => signOut()} />
 				</View>
 			</View>
 		</ScrollView>
