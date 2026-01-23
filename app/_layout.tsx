@@ -7,7 +7,7 @@ export default function RootLayout() {
 			publishableKey={Constants.expoConfig?.extra?.openfortPublishableKey}
 			walletConfig={{
 				debug: false,
-				accountType: AccountTypeEnum.SMART_ACCOUNT, // or EOA or DELEGATED
+				accountType: AccountTypeEnum.EOA, // or EOA or DELEGATED
 				ethereumProviderPolicyId: undefined, // replace with your gas sponsorship policy
 				shieldPublishableKey:
 					Constants.expoConfig?.extra?.openfortShieldPublishableKey,

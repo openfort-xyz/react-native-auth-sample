@@ -91,7 +91,7 @@ export default function Index() {
 
 			// 1. Fetch nonce from backend
 			console.log("Fetching nonce for address:", address);
-			const resp = await openfortClient.auth.initSIWE({ address });
+			const resp = await openfortClient.auth.initSiwe({ address });
 			const nonce = resp.nonce;
 			console.log("Fetched nonce:", nonce);
 
@@ -120,7 +120,7 @@ export default function Index() {
 			console.log("Opened MetaMask to complete signing", mmRes);
 
 			// 4. Send to backend for verification
-			const verifyRes = await openfortClient.auth.authenticateWithSIWE({
+			const verifyRes = await openfortClient.auth.loginWithSiwe({
 				signature,
 				message,
 				walletClientType: "metamask",
