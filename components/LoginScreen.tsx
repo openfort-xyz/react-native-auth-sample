@@ -58,7 +58,7 @@ export default function LoginScreen() {
 							title={`Login with ${provider}`}
 							onPress={async () => {
 								try {
-									await initOAuth({ provider: provider as OAuthProvider, isLegacyAppleIosBehaviorEnabled: false });
+									await initOAuth({ provider: provider as OAuthProvider });
 								} catch (error) {
 									console.error("Error logging in with OAuth:", error);
 								}
