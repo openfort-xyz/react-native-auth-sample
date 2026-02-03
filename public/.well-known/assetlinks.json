@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.openfort.exposample",
+      "sha256_cert_fingerprints": [
+        "2C:....:9B",
+        "58:BE:..:D9:0A"
+      ]
+    }
+  }
+]

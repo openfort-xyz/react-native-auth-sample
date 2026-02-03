@@ -23,16 +23,21 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.openfort.exposample"
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "extra": {
-      "openfortPublishableKey": "pk_test_2a05678a-dc07-593b-97f0-224f589fcea6",
-      "openfortShieldPublishableKey": "41d616bd-8886-4387-a1ea-a66c94b88760"
+      "openfortPublishableKey": "pk_test_...",
+      "openfortShieldPublishableKey": "937b9c01-...-",
+      "router": {},
+      "eas": {
+        "projectId": "829f09c1-....-4..."
+      }
     },
     "plugins": [
       "expo-router",
@@ -41,6 +46,9 @@
       [
         "expo-build-properties",
         {
+          "android": {
+            "compileSdkVersion": 35
+          },
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
