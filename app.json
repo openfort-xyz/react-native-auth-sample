@@ -12,11 +12,8 @@
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.openfort.exposample",
-      "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        }
-      }
+      "_associatedDomains_comment": "Replace with your ngrok/production domain for passkeys",
+      "associatedDomains": ["webcredentials:<your-domain>"]
     },
     "android": {
       "adaptiveIcon": {
@@ -32,11 +29,15 @@
       "favicon": "./assets/images/favicon.png"
     },
     "extra": {
-      "openfortPublishableKey": "pk_test_...",
-      "openfortShieldPublishableKey": "937b9c01-...-",
+      "_comment": "Get your keys from https://dashboard.openfort.io/api-keys",
+      "openfortPublishableKey": "<your-openfort-publishable-key>",
+      "openfortShieldPublishableKey": "<your-shield-publishable-key>",
+      "_passkeyRpId_comment": "Must match associatedDomains domain (without webcredentials: prefix)",
+      "passkeyRpId": "<your-domain>",
+      "passkeyRpName": "Openfort Wallet",
       "router": {},
       "eas": {
-        "projectId": "829f09c1-....-4..."
+        "projectId": "<your-eas-project-id>"
       }
     },
     "plugins": [
@@ -49,7 +50,7 @@
           "android": {
             "compileSdkVersion": 35
           },
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

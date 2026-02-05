@@ -23,16 +23,7 @@ export default function RootLayout() {
 					Constants.expoConfig?.extra?.openfortShieldPublishableKey,
 				passkeyRpId,
 				passkeyRpName,
-				// If you want to use AUTOMATIC embedded wallet recovery, an encryption session is required.
-				getEncryptionSession: async () => {
-					const res = await fetch("/api/protected-create-encryption-session", {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-						},
-					});
-					return (await res.json()).session;
-				},
+				createEncryptedSessionEndpoint: "/api/protected-create-encryption-session",
 			}}
 			verbose={true}
 			supportedChains={[
@@ -60,7 +51,7 @@ export default function RootLayout() {
 				},
 			]}
 		>
-			<Stack />
+			<Stack screenOptions={{ headerShown: false }} />
 		</OpenfortProvider>
 	);
 }

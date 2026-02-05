@@ -7,14 +7,15 @@ import {
 	useSignOut,
 	useUser,
 } from "@openfort/react-native";
-import Constants from "expo-constants";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
 	Alert,
 	Button,
+	Modal,
 	ScrollView,
 	StyleSheet,
 	Text,
+	TextInput,
 	TouchableOpacity,
 	View,
 } from "react-native";
@@ -22,6 +23,11 @@ import {
 export const UserScreen = () => {
 	const [chainId, setChainId] = useState("84532");
 	const [isSwitchingChain, setIsSwitchingChain] = useState(false);
+	const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+	const [passwordModalMode, setPasswordModalMode] = useState<"create" | "recover">("create");
+	const [password, setPassword] = useState("");
+	const [recoverWalletAddress, setRecoverWalletAddress] = useState<string | null>(null);
+	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
 	const { signOut } = useSignOut();
 	const { user } = useUser();
@@ -30,9 +36,6 @@ export const UserScreen = () => {
 	>(null);
 	const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
 	const { isSupported } = usePasskeySupport();
-
-	// Show "Create Wallet with Passkey" only when passkeys are supported (isSupported from library)
-	const showPasskeyUI = isSupported;
 
 	const { wallets, setActive, create, activeWallet, status } =
 		useEmbeddedEthereumWallet();
@@ -74,19 +77,87 @@ export const UserScreen = () => {
 		[],
 	);
 
-	/**
-	 * Create wallet with passkey (uses default name for faster testing)
-	 */
-	const handleCreateWalletWithPasskey = async () => {
+	const handleCreateWalletAutomatic = () => {
+		create({
+			recoveryMethod: "automatic",
+			onError: (error: Error) => Alert.alert("Error", error.message),
+			onSuccess: ({ account }: { account?: { address?: string } }) =>
+				Alert.alert("Success", `Wallet created: ${account?.address}`),
+		});
+	};
+
+	const handleCreateWalletWithPasskey = () => {
 		create({
 			recoveryMethod: "passkey",
-			onError: (error) => {
-				console.log("Error", error.message);
+			onError: (error: Error) => Alert.alert("Error", error.message),
+			onSuccess: ({ account }: { account?: { address?: string } }) =>
+				Alert.alert("Success", `Wallet created: ${account?.address}`),
+		});
+	};
+
+	const handleCreateWalletWithPassword = () => {
+		if (!password || password.length < 4) {
+			Alert.alert("Error", "Password must be at least 4 characters");
+			return;
+		}
+		setIsPasswordLoading(true);
+		create({
+			recoveryMethod: "password",
+			recoveryPassword: password,
+			onError: (error: Error) => {
+				setIsPasswordLoading(false);
+				setPassword("");
+				Alert.alert("Error", error.message);
 			},
-			onSuccess: async ({ account }) => {
-				console.log("Success", `Wallet created: ${account?.address}`);
+			onSuccess: ({ account }: { account?: { address?: string } }) => {
+				setIsPasswordLoading(false);
+				setPasswordModalVisible(false);
+				setPassword("");
+				Alert.alert("Success", `Wallet created: ${account?.address}`);
 			},
 		});
+	};
+
+	const handleRecoverWalletWithPassword = () => {
+		if (!password || password.length < 4) {
+			Alert.alert("Error", "Password must be at least 4 characters");
+			return;
+		}
+		if (!recoverWalletAddress) {
+			Alert.alert("Error", "No wallet selected for recovery");
+			return;
+		}
+		setIsPasswordLoading(true);
+		setActive({
+			address: recoverWalletAddress as `0x${string}`,
+			chainId: Number(chainId),
+			recoveryMethod: "password",
+			recoveryPassword: password,
+			onError: (error: Error) => {
+				setIsPasswordLoading(false);
+				setPassword("");
+				setRecoverWalletAddress(null);
+				Alert.alert("Error", error.message);
+			},
+			onSuccess: () => {
+				setIsPasswordLoading(false);
+				setPasswordModalVisible(false);
+				setPassword("");
+				setRecoverWalletAddress(null);
+				Alert.alert("Success", "Wallet recovered successfully");
+			},
+		});
+	};
+
+	const openPasswordModal = (mode: "create" | "recover", walletAddress?: string) => {
+		setPasswordModalMode(mode);
+		setPassword("");
+		if (mode === "recover" && walletAddress) {
+			setRecoverWalletAddress(walletAddress);
+		} else {
+			setRecoverWalletAddress(null);
+		}
+		setPasswordModalVisible(true);
 	};
 
 	if (!user) {
@@ -156,11 +227,16 @@ export const UserScreen = () => {
 				<Text style={styles.sectionTitle}>Wallets</Text>
 
 				{wallets.length > 0 ? (
-					wallets.map((w) => (
+					wallets.map((w: { address: string; recoveryMethod?: string }) => (
 						<View key={w.address} style={styles.walletItem}>
-							<Text style={styles.walletItemAddress}>
-								{w.address.slice(0, 8)}...{w.address.slice(-6)}
-							</Text>
+							<View style={styles.walletInfo}>
+								<Text style={styles.walletItemAddress}>
+									{w.address.slice(0, 8)}...{w.address.slice(-6)}
+								</Text>
+								<Text style={styles.walletRecoveryMethod}>
+									Recovery: {w.recoveryMethod ?? "unknown"}
+								</Text>
+							</View>
 							<TouchableOpacity
 								style={[
 									styles.connectButton,
@@ -170,18 +246,22 @@ export const UserScreen = () => {
 									activeWallet?.address === w.address || status === "connecting"
 								}
 								onPress={() => {
-									setConnectingWalletAddress(w.address);
-									setActive({
-										address: w.address as `0x${string}`,
-										chainId: Number(chainId),
-										onSuccess: () => {
-											setConnectingWalletAddress(null);
-										},
-										onError: (error) => {
-											setConnectingWalletAddress(null);
-											Alert.alert("Error", error.message);
-										},
-									});
+									if (w.recoveryMethod === "password") {
+										openPasswordModal("recover", w.address);
+									} else {
+										setConnectingWalletAddress(w.address);
+										setActive({
+											address: w.address as `0x${string}`,
+											chainId: Number(chainId),
+											onSuccess: () => {
+												setConnectingWalletAddress(null);
+											},
+											onError: (error: Error) => {
+												setConnectingWalletAddress(null);
+												Alert.alert("Error", error.message);
+											},
+										});
+									}
 								}}
 							>
 								<Text style={styles.connectButtonText}>
@@ -198,57 +278,98 @@ export const UserScreen = () => {
 					<Text style={styles.emptyText}>No wallets yet</Text>
 				)}
 
-				{/* Passkey support status */}
-				<Text style={styles.prfStatus}>
-					{isSupported
-						? "Passkeys supported - Passkey wallet available"
-						: "Passkeys not available on this device"}
-				</Text>
-
-				{/* Create Wallet Buttons */}
+				{/* Create Wallet Options */}
 				<View style={styles.createButtons}>
-					{showPasskeyUI ? (
-						<>
-							<Button
-								title={
-									status === "creating"
-										? "Creating..."
-										: "Create Wallet with Passkey"
-								}
-								disabled={status === "creating"}
-								onPress={handleCreateWalletWithPasskey}
-							/>
-							<View style={{ height: 8 }} />
-							<Button
-								title="Create Wallet (No Passkey)"
-								color="#888"
-								disabled={status === "creating"}
-								onPress={() =>
-									create({
-										recoveryMethod: "automatic",
-										onError: (error) => Alert.alert("Error", error.message),
-										onSuccess: ({ account }) =>
-											Alert.alert("Success", `Wallet: ${account?.address}`),
-									})
-								}
-							/>
-						</>
-					) : (
-						<Button
-							title={status === "creating" ? "Creating..." : "Create Wallet"}
+					<Text style={styles.createTitle}>Create Wallet</Text>
+
+					<TouchableOpacity
+						style={[styles.createOption, status === "creating" && styles.disabledOption]}
+						disabled={status === "creating"}
+						onPress={handleCreateWalletAutomatic}
+					>
+						<Text style={styles.createOptionTitle}>Automatic</Text>
+						<Text style={styles.createOptionDesc}>No user input required</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={[styles.createOption, status === "creating" && styles.disabledOption]}
+						disabled={status === "creating"}
+						onPress={() => openPasswordModal("create")}
+					>
+						<Text style={styles.createOptionTitle}>Password</Text>
+						<Text style={styles.createOptionDesc}>Recover wallet with your password</Text>
+					</TouchableOpacity>
+
+					{isSupported && (
+						<TouchableOpacity
+							style={[styles.createOption, status === "creating" && styles.disabledOption]}
 							disabled={status === "creating"}
-							onPress={() =>
-								create({
-									recoveryMethod: "automatic",
-									onError: (error) => Alert.alert("Error", error.message),
-									onSuccess: ({ account }) =>
-										Alert.alert("Success", `Wallet: ${account?.address}`),
-								})
-							}
-						/>
+							onPress={handleCreateWalletWithPasskey}
+						>
+							<Text style={styles.createOptionTitle}>Passkey</Text>
+							<Text style={styles.createOptionDesc}>Recover wallet with biometrics</Text>
+						</TouchableOpacity>
+					)}
+
+					{!isSupported && (
+						<Text style={styles.prfStatus}>
+							Passkeys not available on this device
+						</Text>
 					)}
 				</View>
-			</View>
+
+							</View>
+
+			{/* Password Modal */}
+			<Modal
+				visible={passwordModalVisible}
+				transparent
+				animationType="fade"
+				onRequestClose={() => setPasswordModalVisible(false)}
+			>
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<Text style={styles.modalTitle}>
+							{passwordModalMode === "create" ? "Create Wallet" : "Recover Wallet"}
+						</Text>
+						<Text style={styles.modalSubtitle}>
+							{passwordModalMode === "create"
+								? "Enter a password to secure your wallet"
+								: "Enter your password to recover your wallet"}
+						</Text>
+						<TextInput
+							style={styles.passwordInput}
+							placeholder="Enter password"
+							secureTextEntry
+							value={password}
+							onChangeText={setPassword}
+							autoFocus
+						/>
+						<View style={styles.modalButtons}>
+							<TouchableOpacity
+								style={styles.modalCancelButton}
+								disabled={isPasswordLoading}
+								onPress={() => {
+									setPasswordModalVisible(false);
+									setPassword("");
+									setRecoverWalletAddress(null);
+								}}
+							>
+								<Text style={[styles.modalCancelText, isPasswordLoading && styles.disabledText]}>Cancel</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={[styles.modalConfirmButton, isPasswordLoading && styles.disabledButton]}
+								disabled={isPasswordLoading}
+								onPress={passwordModalMode === "create" ? handleCreateWalletWithPassword : handleRecoverWalletWithPassword}
+							>
+								<Text style={styles.modalConfirmText}>
+									{isPasswordLoading ? "Loading..." : (passwordModalMode === "create" ? "Create" : "Recover")}
+								</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
 
 			
 
@@ -326,10 +447,18 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		borderBottomColor: "#eee",
 	},
+	walletInfo: {
+		flex: 1,
+	},
 	walletItemAddress: {
 		fontSize: 12,
 		fontFamily: "monospace",
 		color: "#333",
+	},
+	walletRecoveryMethod: {
+		fontSize: 10,
+		color: "#666",
+		marginTop: 2,
 	},
 	connectButton: {
 		backgroundColor: "#007AFF",
@@ -360,62 +489,110 @@ const styles = StyleSheet.create({
 	createButtons: {
 		marginTop: 15,
 	},
-	passkeyItem: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		paddingVertical: 10,
-		borderBottomWidth: 1,
-		borderBottomColor: "#eee",
+	createTitle: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 10,
 	},
-	passkeyInfo: {
-		flex: 1,
+	createOption: {
+		backgroundColor: "#f8f8f8",
+		padding: 12,
+		borderRadius: 8,
+		marginBottom: 8,
+		borderWidth: 1,
+		borderColor: "#e0e0e0",
 	},
-	passkeyName: {
+	disabledOption: {
+		opacity: 0.5,
+	},
+	createOptionTitle: {
 		fontSize: 14,
 		fontWeight: "600",
 		color: "#333",
 	},
-	passkeyWallet: {
+	createOptionDesc: {
 		fontSize: 11,
-		fontFamily: "monospace",
 		color: "#666",
 		marginTop: 2,
 	},
-	passkeyDate: {
-		fontSize: 10,
-		color: "#999",
-		marginTop: 2,
-	},
-	passkeyActions: {
-		flexDirection: "row",
-		gap: 8,
+	recoverSection: {
+		marginTop: 10,
+		paddingTop: 10,
+		borderTopWidth: 1,
+		borderTopColor: "#eee",
 	},
 	recoverButton: {
-		backgroundColor: "#007AFF",
-		paddingHorizontal: 10,
-		paddingVertical: 6,
-		borderRadius: 4,
+		padding: 10,
+		alignItems: "center",
 	},
 	recoverButtonText: {
-		color: "#fff",
-		fontSize: 11,
-		fontWeight: "600",
+		color: "#007AFF",
+		fontSize: 13,
 	},
-	deleteButton: {
-		backgroundColor: "#ff4444",
-		paddingHorizontal: 10,
-		paddingVertical: 6,
-		borderRadius: 4,
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: "rgba(0,0,0,0.5)",
+		justifyContent: "center",
+		alignItems: "center",
 	},
-	deleteButtonText: {
-		color: "#fff",
-		fontSize: 11,
-		fontWeight: "600",
+	modalContent: {
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		padding: 20,
+		width: "85%",
+		maxWidth: 340,
 	},
-	debugText: {
-		fontSize: 10,
-		fontFamily: "monospace",
+	modalTitle: {
+		fontSize: 18,
+		fontWeight: "bold",
+		color: "#333",
+		marginBottom: 4,
+	},
+	modalSubtitle: {
+		fontSize: 13,
 		color: "#666",
+		marginBottom: 16,
+	},
+	passwordInput: {
+		borderWidth: 1,
+		borderColor: "#ddd",
+		borderRadius: 8,
+		padding: 12,
+		fontSize: 16,
+		marginBottom: 16,
+		color: "#333",
+		backgroundColor: "#f8f8f8",
+	},
+	modalButtons: {
+		flexDirection: "row",
+		justifyContent: "flex-end",
+		gap: 10,
+	},
+	modalCancelButton: {
+		paddingVertical: 10,
+		paddingHorizontal: 16,
+	},
+	modalCancelText: {
+		color: "#666",
+		fontSize: 14,
+		fontWeight: "600",
+	},
+	modalConfirmButton: {
+		backgroundColor: "#007AFF",
+		paddingVertical: 10,
+		paddingHorizontal: 20,
+		borderRadius: 6,
+	},
+	modalConfirmText: {
+		color: "#fff",
+		fontSize: 14,
+		fontWeight: "600",
+	},
+	disabledButton: {
+		opacity: 0.6,
+	},
+	disabledText: {
+		opacity: 0.5,
 	},
 });

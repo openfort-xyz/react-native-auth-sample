@@ -1,5 +1,4 @@
 import {
-	isPasskeySupported,
 	type OAuthProvider,
 	useGuestAuth,
 	useOAuth,
@@ -7,66 +6,19 @@ import {
 } from "@openfort/react-native";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import { Button, StyleSheet, Text, View } from "react-native";
 
 const OAUTH_PROVIDERS = ["twitter", "google", "discord", "apple"] as const;
 
-function getSdkCheckButtonLabel(
-	loading: boolean,
-	result: boolean | null,
-): string {
-	if (loading) return "Check support (SDK)...";
-	if (result === null) return "Check support (SDK)";
-	return result ? "Check support (SDK) ✅" : "Check support (SDK) ❌";
-}
-
 export default function LoginScreen() {
+	const router = useRouter();
 	const { signUpGuest } = useGuestAuth();
 	const { initOAuth, error } = useOAuth();
 	const { isSupported } = usePasskeySupport();
 
-	const [prfTest, setPrfTest] = useState<{
-		loading: boolean;
-		supported: boolean | null;
-	}>({
-		loading: false,
-		supported: null,
-	});
-	const [sdkCheck, setSdkCheck] = useState<{
-		loading: boolean;
-		supported: boolean | null;
-	}>({
-		loading: false,
-		supported: null,
-	});
-	const [passkeySupported, setPasskeySupported] = useState<boolean | null>(
-		null,
-	);
-
 	const rpId = Constants.expoConfig?.extra?.passkeyRpId ?? "(not set)";
 	const rpName = Constants.expoConfig?.extra?.passkeyRpName ?? "(not set)";
-	const rpConfigured = rpId !== "(not set)" && rpName !== "(not set)";
-
-	useEffect(() => {
-		setPasskeySupported(isSupported);
-	}, [isSupported]);
-
-	const runSdkCheck = useCallback(async () => {
-		setSdkCheck({ loading: true, supported: null });
-		try {
-			const supported = await isPasskeySupported();
-			setSdkCheck({ loading: false, supported });
-			alert(
-				supported
-					? "Passkeys supported (SDK — isSupported)."
-					: "Passkeys not supported (SDK).",
-			);
-		} catch {
-			setSdkCheck({ loading: false, supported: false });
-			alert("Check support (SDK) failed.");
-		}
-	}, []);
 
 	return (
 		<View style={styles.container}>
@@ -85,9 +37,9 @@ export default function LoginScreen() {
 				<Text style={styles.meta}>RP Name: {rpName}</Text>
 				<Text style={styles.meta}>
 					Passkeys:{" "}
-					{passkeySupported === null
+					{isSupported === null
 						? "checking…"
-						: passkeySupported
+						: isSupported
 							? "supported"
 							: "not supported"}
 				</Text>
@@ -99,9 +51,8 @@ export default function LoginScreen() {
 			<Button title="Login as Guest" onPress={() => signUpGuest()} />
 
 			<Button
-				title={getSdkCheckButtonLabel(sdkCheck.loading, sdkCheck.supported)}
-				disabled={sdkCheck.loading}
-				onPress={runSdkCheck}
+				title="Login with Email OTP"
+				onPress={() => router.push("/(auth)/email-otp")}
 			/>
 
 			<View style={styles.oauthRow}>
