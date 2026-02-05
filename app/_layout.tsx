@@ -1,31 +1,31 @@
 import { AccountTypeEnum, OpenfortProvider } from "@openfort/react-native";
 import Constants from "expo-constants";
 import { Stack } from "expo-router";
+
 export default function RootLayout() {
+	// Passkey RP config: SDK uses NativePasskeyHandler when passkeyRpId is set and no overrides.passkeyHandler
+	const passkeyRpId = Constants.expoConfig?.extra?.passkeyRpId as
+		| string
+		| undefined;
+	const passkeyRpName = Constants.expoConfig?.extra?.passkeyRpName as
+		| string
+		| undefined;
+
 	return (
 		<OpenfortProvider
 			publishableKey={Constants.expoConfig?.extra?.openfortPublishableKey}
+			// overrides={{ iframeUrl: "https://marriage-reports-dame-pam.trycloudflare.com" }}
 			walletConfig={{
-				debug: false,
-				accountType: AccountTypeEnum.EOA, // or EOA or DELEGATED
-				ethereumProviderPolicyId: undefined, // replace with your gas sponsorship policy
+				debug: true, // Enable debug for development
+				accountType: AccountTypeEnum.EOA,
+				ethereumProviderPolicyId: undefined,
 				shieldPublishableKey:
 					Constants.expoConfig?.extra?.openfortShieldPublishableKey,
-				// If you want to use AUTOMATIC embedded wallet recovery, an encryption session is required.
-				getEncryptionSession: async () => {
-					const res = await fetch("/api/protected-create-encryption-session", {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-						},
-					});
-					return (await res.json()).session;
-				},
+				passkeyRpId,
+				passkeyRpName,
+				createEncryptedSessionEndpoint: "/api/protected-create-encryption-session",
 			}}
 			verbose={true}
-			// overrides={{
-			//   backendUrl: 'http://localhost:3000'
-			// }}
 			supportedChains={[
 				{
 					id: 84532,
@@ -51,7 +51,7 @@ export default function RootLayout() {
 				},
 			]}
 		>
-			<Stack />
+			<Stack screenOptions={{ headerShown: false }} />
 		</OpenfortProvider>
 	);
 }
