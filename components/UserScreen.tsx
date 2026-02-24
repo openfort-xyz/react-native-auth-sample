@@ -3,9 +3,9 @@ import {
 	type OAuthProvider,
 	useEmbeddedEthereumWallet,
 	useOAuth,
-	usePasskeySupport,
+	usePasskeyPrfSupport,
 	useSignOut,
-	useUser,
+	useUser
 } from "@openfort/react-native";
 import { useCallback, useState } from "react";
 import {
@@ -35,7 +35,7 @@ export const UserScreen = () => {
 		string | null
 	>(null);
 	const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
-	const { isSupported } = usePasskeySupport();
+	const { isSupported } = usePasskeyPrfSupport();
 
 	const { wallets, setActive, create, activeWallet, status } =
 		useEmbeddedEthereumWallet();
@@ -51,7 +51,7 @@ export const UserScreen = () => {
 				method: "personal_sign",
 				params: [`0x0${Date.now()}`, activeWallet?.address],
 			});
-			if (message) {
+			if (message && typeof message === "string") {
 				Alert.alert("Success", `Message signed: ${message.slice(0, 20)}...`);
 			}
 		} catch (error) {

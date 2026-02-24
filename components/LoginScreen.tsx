@@ -2,7 +2,7 @@ import {
 	type OAuthProvider,
 	useGuestAuth,
 	useOAuth,
-	usePasskeySupport,
+	usePasskeyPrfSupport,
 } from "@openfort/react-native";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
@@ -15,7 +15,7 @@ export default function LoginScreen() {
 	const router = useRouter();
 	const { signUpGuest } = useGuestAuth();
 	const { initOAuth, error } = useOAuth();
-	const { isSupported } = usePasskeySupport();
+	const { isSupported } = usePasskeyPrfSupport();
 
 	const rpId = Constants.expoConfig?.extra?.passkeyRpId ?? "(not set)";
 	const rpName = Constants.expoConfig?.extra?.passkeyRpName ?? "(not set)";
