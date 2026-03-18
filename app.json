@@ -48,7 +48,7 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 35
+            "compileSdkVersion": 36
           },
           "image": "./assets/images/splash.png",
           "imageWidth": 200,
