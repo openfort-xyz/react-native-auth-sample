@@ -7,13 +7,21 @@ import {
 import * as Application from "expo-application";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { Alert, Button, StyleSheet, Text, View } from "react-native";
 
 const OAUTH_PROVIDERS = ["twitter", "google", "discord", "apple"] as const;
 
 export default function LoginScreen() {
 	const router = useRouter();
-	const { signUpGuest } = useGuestAuth();
+	const { signUpGuest, isLoading: isGuestLoading, error: guestError } = useGuestAuth({
+		onError: (error) => {
+			console.error("[LoginScreen] Guest auth error:", JSON.stringify(error, null, 2));
+			Alert.alert("Guest Auth Error", error?.message ?? "Unknown error");
+		},
+		onSuccess: (data) => {
+			console.log("[LoginScreen] Guest auth success:", data?.user?.id);
+		},
+	});
 	const { initOAuth, error } = useOAuth();
 	const { isSupported } = usePasskeyPrfSupport();
 
@@ -48,7 +56,7 @@ export default function LoginScreen() {
 				</Text>
 			</View>
 
-			<Button title="Login as Guest" onPress={() => signUpGuest()} />
+			<Button title={isGuestLoading ? "Signing in..." : "Login as Guest"} disabled={isGuestLoading} onPress={() => signUpGuest()} />
 
 			<Button
 				title="Login with Email OTP"
@@ -65,7 +73,8 @@ export default function LoginScreen() {
 				))}
 			</View>
 
-			{error && <Text style={styles.error}>Error: {error.message}</Text>}
+			{error && <Text style={styles.error}>OAuth Error: {error.message}</Text>}
+			{guestError && <Text style={styles.error}>Guest Error: {guestError.message}</Text>}
 		</View>
 	);
 }

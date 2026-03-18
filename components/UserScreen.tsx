@@ -2,10 +2,11 @@ import {
 	type ConnectedEmbeddedEthereumWallet,
 	type OAuthProvider,
 	useEmbeddedEthereumWallet,
+	useEmbeddedSolanaWallet,
 	useOAuth,
 	usePasskeyPrfSupport,
 	useSignOut,
-	useUser
+	useUser,
 } from "@openfort/react-native";
 import { useCallback, useState } from "react";
 import {
@@ -19,8 +20,12 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
+
+type ChainTab = "ethereum" | "solana";
 
 export const UserScreen = () => {
+	const [activeTab, setActiveTab] = useState<ChainTab>("ethereum");
 	const [chainId, setChainId] = useState("84532");
 	const [isSwitchingChain, setIsSwitchingChain] = useState(false);
 	const [passwordModalVisible, setPasswordModalVisible] = useState(false);
@@ -31,25 +36,40 @@ export const UserScreen = () => {
 
 	const { signOut } = useSignOut();
 	const { user } = useUser();
-	const [connectingWalletAddress, setConnectingWalletAddress] = useState<
-		string | null
-	>(null);
+	const [connectingWalletAddress, setConnectingWalletAddress] = useState<string | null>(null);
 	const { linkOauth, isLoading: isOAuthLoading } = useOAuth();
 	const { isSupported } = usePasskeyPrfSupport();
 
-	const { wallets, setActive, create, activeWallet, status } =
-		useEmbeddedEthereumWallet();
+	// Ethereum wallet
+	const {
+		wallets: ethWallets,
+		setActive: ethSetActive,
+		create: ethCreate,
+		activeWallet: ethActiveWallet,
+		status: ethStatus,
+		exportPrivateKey: ethExportPrivateKey,
+	} = useEmbeddedEthereumWallet();
+
+	// Solana wallet
+	const {
+		wallets: solWallets,
+		setActive: solSetActive,
+		create: solCreate,
+		activeWallet: solActiveWallet,
+		status: solStatus,
+		exportPrivateKey: solExportPrivateKey,
+	} = useEmbeddedSolanaWallet();
 
 	const signMessage = useCallback(async () => {
 		try {
-			if (!activeWallet) {
+			if (!ethActiveWallet) {
 				Alert.alert("Error", "No active wallet selected");
 				return;
 			}
-			const provider = await activeWallet.getProvider();
+			const provider = await ethActiveWallet.getProvider();
 			const message = await provider.request({
 				method: "personal_sign",
-				params: [`0x0${Date.now()}`, activeWallet?.address],
+				params: [`0x0${Date.now()}`, ethActiveWallet?.address],
 			});
 			if (message && typeof message === "string") {
 				Alert.alert("Success", `Message signed: ${message.slice(0, 20)}...`);
@@ -57,7 +77,24 @@ export const UserScreen = () => {
 		} catch (error) {
 			console.error("[UserScreen] Sign message error:", error);
 		}
-	}, [activeWallet]);
+	}, [ethActiveWallet]);
+
+	const signSolanaMessage = useCallback(async () => {
+		try {
+			if (!solActiveWallet) {
+				Alert.alert("Error", "No active Solana wallet");
+				return;
+			}
+			const provider = await solActiveWallet.getProvider();
+			const signature = await provider.signMessage(`Hello from Openfort! ${Date.now()}`);
+			if (signature) {
+				Alert.alert("Success", `Signed: ${signature.slice(0, 20)}...`);
+			}
+		} catch (error) {
+			console.error("[UserScreen] Solana sign message error:", error);
+			Alert.alert("Error", error instanceof Error ? error.message : "Failed to sign");
+		}
+	}, [solActiveWallet]);
 
 	const switchChain = useCallback(
 		async (wallet: ConnectedEmbeddedEthereumWallet, id: string) => {
@@ -78,21 +115,39 @@ export const UserScreen = () => {
 	);
 
 	const handleCreateWalletAutomatic = () => {
-		create({
-			recoveryMethod: "automatic",
-			onError: (error: Error) => Alert.alert("Error", error.message),
-			onSuccess: ({ account }: { account?: { address?: string } }) =>
-				Alert.alert("Success", `Wallet created: ${account?.address}`),
-		});
+		if (activeTab === "ethereum") {
+			ethCreate({
+				recoveryMethod: "automatic",
+				onError: (error: Error) => Alert.alert("Error", error.message),
+				onSuccess: ({ account }: { account?: { address?: string } }) =>
+					Alert.alert("Success", `ETH wallet created: ${account?.address}`),
+			});
+		} else {
+			solCreate({
+				recoveryMethod: "automatic",
+				onError: (error: Error) => Alert.alert("Error", error.message),
+				onSuccess: ({ account }: { account?: { address?: string } }) =>
+					Alert.alert("Success", `SOL wallet created: ${account?.address}`),
+			});
+		}
 	};
 
 	const handleCreateWalletWithPasskey = () => {
-		create({
-			recoveryMethod: "passkey",
-			onError: (error: Error) => Alert.alert("Error", error.message),
-			onSuccess: ({ account }: { account?: { address?: string } }) =>
-				Alert.alert("Success", `Wallet created: ${account?.address}`),
-		});
+		if (activeTab === "ethereum") {
+			ethCreate({
+				recoveryMethod: "passkey",
+				onError: (error: Error) => Alert.alert("Error", error.message),
+				onSuccess: ({ account }: { account?: { address?: string } }) =>
+					Alert.alert("Success", `ETH wallet created: ${account?.address}`),
+			});
+		} else {
+			solCreate({
+				recoveryMethod: "passkey",
+				onError: (error: Error) => Alert.alert("Error", error.message),
+				onSuccess: ({ account }: { account?: { address?: string } }) =>
+					Alert.alert("Success", `SOL wallet created: ${account?.address}`),
+			});
+		}
 	};
 
 	const handleCreateWalletWithPassword = () => {
@@ -101,7 +156,8 @@ export const UserScreen = () => {
 			return;
 		}
 		setIsPasswordLoading(true);
-		create({
+		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
+		createFn({
 			recoveryMethod: "password",
 			recoveryPassword: password,
 			onError: (error: Error) => {
@@ -128,25 +184,46 @@ export const UserScreen = () => {
 			return;
 		}
 		setIsPasswordLoading(true);
-		setActive({
-			address: recoverWalletAddress as `0x${string}`,
-			chainId: Number(chainId),
-			recoveryMethod: "password",
-			recoveryPassword: password,
-			onError: (error: Error) => {
-				setIsPasswordLoading(false);
-				setPassword("");
-				setRecoverWalletAddress(null);
-				Alert.alert("Error", error.message);
-			},
-			onSuccess: () => {
-				setIsPasswordLoading(false);
-				setPasswordModalVisible(false);
-				setPassword("");
-				setRecoverWalletAddress(null);
-				Alert.alert("Success", "Wallet recovered successfully");
-			},
-		});
+		if (activeTab === "ethereum") {
+			ethSetActive({
+				address: recoverWalletAddress as `0x${string}`,
+				chainId: Number(chainId),
+				recoveryMethod: "password",
+				recoveryPassword: password,
+				onError: (error: Error) => {
+					setIsPasswordLoading(false);
+					setPassword("");
+					setRecoverWalletAddress(null);
+					Alert.alert("Error", error.message);
+				},
+				onSuccess: () => {
+					setIsPasswordLoading(false);
+					setPasswordModalVisible(false);
+					setPassword("");
+					setRecoverWalletAddress(null);
+					Alert.alert("Success", "Wallet recovered successfully");
+				},
+			});
+		} else {
+			solSetActive({
+				address: recoverWalletAddress,
+				recoveryMethod: "password",
+				recoveryPassword: password,
+				onError: (error: Error) => {
+					setIsPasswordLoading(false);
+					setPassword("");
+					setRecoverWalletAddress(null);
+					Alert.alert("Error", error.message);
+				},
+				onSuccess: () => {
+					setIsPasswordLoading(false);
+					setPasswordModalVisible(false);
+					setPassword("");
+					setRecoverWalletAddress(null);
+					Alert.alert("Success", "Wallet recovered successfully");
+				},
+			});
+		}
 	};
 
 	const openPasswordModal = (mode: "create" | "recover", walletAddress?: string) => {
@@ -163,6 +240,11 @@ export const UserScreen = () => {
 	if (!user) {
 		return null;
 	}
+
+	const wallets = activeTab === "ethereum" ? ethWallets : solWallets;
+	const activeWallet = activeTab === "ethereum" ? ethActiveWallet : solActiveWallet;
+	const status = activeTab === "ethereum" ? ethStatus : solStatus;
+	const exportPrivateKey = activeTab === "ethereum" ? ethExportPrivateKey : solExportPrivateKey;
 
 	return (
 		<ScrollView style={styles.container}>
@@ -200,31 +282,76 @@ export const UserScreen = () => {
 				<Text style={styles.value}>{user.id}</Text>
 			</View>
 
+			{/* Chain Tab Switcher */}
+			<View style={styles.tabRow}>
+				<TouchableOpacity
+					style={[styles.tab, activeTab === "ethereum" && styles.activeTab]}
+					onPress={() => setActiveTab("ethereum")}
+				>
+					<Text style={[styles.tabText, activeTab === "ethereum" && styles.activeTabText]}>
+						Ethereum
+					</Text>
+				</TouchableOpacity>
+				<TouchableOpacity
+					style={[styles.tab, activeTab === "solana" && styles.activeTab]}
+					onPress={() => setActiveTab("solana")}
+				>
+					<Text style={[styles.tabText, activeTab === "solana" && styles.activeTabText]}>
+						Solana
+					</Text>
+				</TouchableOpacity>
+			</View>
+
 			{/* Active Wallet */}
 			{activeWallet?.address && (
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Active Wallet</Text>
-					<Text style={styles.walletAddress}>{activeWallet.address}</Text>
-					<Text style={styles.chainText}>
-						Chain: {isSwitchingChain ? "Switching..." : chainId}
+					<Text style={styles.sectionTitle}>
+						Active {activeTab === "ethereum" ? "Ethereum" : "Solana"} Wallet
 					</Text>
+					<Text style={styles.walletAddress}>{activeWallet.address}</Text>
+					{activeTab === "ethereum" && (
+						<Text style={styles.chainText}>
+							Chain: {isSwitchingChain ? "Switching..." : chainId}
+						</Text>
+					)}
 					<View style={styles.buttonRow}>
-						<Button title="Sign Message" onPress={signMessage} />
 						<Button
-							title={`Switch to ${chainId === "11155111" ? "Base" : "Sepolia"}`}
-							onPress={() => {
-								const newChain = chainId === "11155111" ? "84532" : "11155111";
-								switchChain(activeWallet, newChain);
-								setChainId(newChain);
+							title="Sign Message"
+							onPress={activeTab === "ethereum" ? signMessage : signSolanaMessage}
+						/>
+						<Button
+							title="Export Key"
+							onPress={async () => {
+								try {
+									const key = await exportPrivateKey();
+									Alert.alert("Private Key", key, [
+										{ text: "Copy", onPress: () => Clipboard.setStringAsync(key) },
+										{ text: "OK" },
+									]);
+								} catch (error) {
+									Alert.alert("Error", error instanceof Error ? error.message : "Failed to export key");
+								}
 							}}
 						/>
+						{activeTab === "ethereum" && ethActiveWallet && (
+							<Button
+								title={`Switch to ${chainId === "11155111" ? "Base" : "Sepolia"}`}
+								onPress={() => {
+									const newChain = chainId === "11155111" ? "84532" : "11155111";
+									switchChain(ethActiveWallet, newChain);
+									setChainId(newChain);
+								}}
+							/>
+						)}
 					</View>
 				</View>
 			)}
 
 			{/* Wallets */}
 			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>Wallets</Text>
+				<Text style={styles.sectionTitle}>
+					{activeTab === "ethereum" ? "Ethereum" : "Solana"} Wallets
+				</Text>
 
 				{wallets.length > 0 ? (
 					wallets.map((w: { address: string; recoveryMethod?: string }) => (
@@ -248,14 +375,22 @@ export const UserScreen = () => {
 								onPress={() => {
 									if (w.recoveryMethod === "password") {
 										openPasswordModal("recover", w.address);
-									} else {
+									} else if (activeTab === "ethereum") {
 										setConnectingWalletAddress(w.address);
-										setActive({
+										ethSetActive({
 											address: w.address as `0x${string}`,
 											chainId: Number(chainId),
-											onSuccess: () => {
+											onSuccess: () => setConnectingWalletAddress(null),
+											onError: (error: Error) => {
 												setConnectingWalletAddress(null);
+												Alert.alert("Error", error.message);
 											},
+										});
+									} else {
+										setConnectingWalletAddress(w.address);
+										solSetActive({
+											address: w.address,
+											onSuccess: () => setConnectingWalletAddress(null),
 											onError: (error: Error) => {
 												setConnectingWalletAddress(null);
 												Alert.alert("Error", error.message);
@@ -280,7 +415,9 @@ export const UserScreen = () => {
 
 				{/* Create Wallet Options */}
 				<View style={styles.createButtons}>
-					<Text style={styles.createTitle}>Create Wallet</Text>
+					<Text style={styles.createTitle}>
+						Create {activeTab === "ethereum" ? "Ethereum" : "Solana"} Wallet
+					</Text>
 
 					<TouchableOpacity
 						style={[styles.createOption, status === "creating" && styles.disabledOption]}
@@ -317,8 +454,7 @@ export const UserScreen = () => {
 						</Text>
 					)}
 				</View>
-
-							</View>
+			</View>
 
 			{/* Password Modal */}
 			<Modal
@@ -371,8 +507,6 @@ export const UserScreen = () => {
 				</View>
 			</Modal>
 
-			
-
 			{/* Logout */}
 			<View style={styles.section}>
 				<Button title="Logout" color="#c44" onPress={() => signOut()} />
@@ -411,6 +545,32 @@ const styles = StyleSheet.create({
 	value: {
 		fontSize: 14,
 		color: "#333",
+	},
+	tabRow: {
+		flexDirection: "row",
+		marginHorizontal: 10,
+		marginTop: 10,
+		borderRadius: 8,
+		overflow: "hidden",
+		borderWidth: 1,
+		borderColor: "#007AFF",
+	},
+	tab: {
+		flex: 1,
+		paddingVertical: 10,
+		alignItems: "center",
+		backgroundColor: "#fff",
+	},
+	activeTab: {
+		backgroundColor: "#007AFF",
+	},
+	tabText: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#007AFF",
+	},
+	activeTabText: {
+		color: "#fff",
 	},
 	buttonRow: {
 		flexDirection: "row",
@@ -515,20 +675,6 @@ const styles = StyleSheet.create({
 		fontSize: 11,
 		color: "#666",
 		marginTop: 2,
-	},
-	recoverSection: {
-		marginTop: 10,
-		paddingTop: 10,
-		borderTopWidth: 1,
-		borderTopColor: "#eee",
-	},
-	recoverButton: {
-		padding: 10,
-		alignItems: "center",
-	},
-	recoverButtonText: {
-		color: "#007AFF",
-		fontSize: 13,
 	},
 	modalOverlay: {
 		flex: 1,
