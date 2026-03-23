@@ -41,3 +41,6 @@ app-example
 ios/
 android/
 package-lock.json
+.agents/
+.claude/
+skills-lock.json
