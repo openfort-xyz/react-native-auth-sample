@@ -14,11 +14,10 @@ export default function RootLayout() {
 	return (
 		<OpenfortProvider
 			publishableKey={Constants.expoConfig?.extra?.openfortPublishableKey}
-			// overrides={{ iframeUrl: "https://marriage-reports-dame-pam.trycloudflare.com" }}
 			walletConfig={{
 				debug: true, // Enable debug for development
 				accountType: AccountTypeEnum.EOA,
-				ethereumProviderPolicyId: undefined,
+				feeSponsorshipId: undefined,
 				shieldPublishableKey:
 					Constants.expoConfig?.extra?.openfortShieldPublishableKey,
 				passkeyRpId,

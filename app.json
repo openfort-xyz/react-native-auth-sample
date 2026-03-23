@@ -7,20 +7,19 @@
     "icon": "./assets/images/icon.png",
     "scheme": "expo",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.openfort.exposample",
-      "_associatedDomains_comment": "Replace with your ngrok/production domain for passkeys",
-      "associatedDomains": ["webcredentials:<your-domain>"]
+      "associatedDomains": [
+        "webcredentials:<your-domain>"
+      ]
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.openfort.exposample"
     },
     "web": {
@@ -55,7 +54,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
