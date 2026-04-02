@@ -8,6 +8,7 @@ import {
 	useSignOut,
 	useUser,
 } from "@openfort/react-native";
+import * as Clipboard from "expo-clipboard";
 import { useCallback, useState } from "react";
 import {
 	Alert,
@@ -20,7 +21,6 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import * as Clipboard from "expo-clipboard";
 
 type ChainTab = "ethereum" | "solana";
 
