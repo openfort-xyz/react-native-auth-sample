@@ -60,5 +60,11 @@
     "eslint-config-expo": "~55.0.0",
     "typescript": "~5.9.2"
   },
+  "pnpm": {
+    "overrides": {
+      "picomatch@<4.0.4": "4.0.4",
+      "brace-expansion@<2": "2.0.1"
+    }
+  },
   "private": true
 }
