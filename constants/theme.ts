@@ -7,7 +7,7 @@ import { Platform, type TextStyle, type ViewStyle } from "react-native";
 
 export const colors = {
 	// Surfaces
-	background: "#F4F5F9",
+	background: "#FFFFFF",
 	card: "#FFFFFF",
 	cardMuted: "#F7F8FC",
 

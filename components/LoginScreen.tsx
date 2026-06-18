@@ -1,3 +1,7 @@
+import { Button } from "@/components/ui/Button";
+import { Screen } from "@/components/ui/Screen";
+import { SocialButton } from "@/components/ui/SocialButton";
+import { colors, fontFamily, fontSize, fontWeight, radius, spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
 	type OAuthProvider,
@@ -7,13 +11,8 @@ import {
 } from "@openfort/react-native";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Alert, StyleSheet, Text, View } from "react-native";
-import { Button } from "@/components/ui/Button";
-import { Screen } from "@/components/ui/Screen";
-import { SocialButton } from "@/components/ui/SocialButton";
-import { colors, fontFamily, fontSize, fontWeight, radius, spacing } from "@/constants/theme";
+import { Alert, Image, StyleSheet, Text, View } from "react-native";
 
 const OAUTH_PROVIDERS = ["google", "twitter", "discord", "apple"] as const;
 
@@ -44,8 +43,7 @@ export default function LoginScreen() {
 				<Image
 					source={require("@/assets/images/openfort-logo.png")}
 					style={styles.logoImg}
-					contentFit="contain"
-					transition={200}
+					resizeMode="contain"
 				/>
 				<Text style={styles.title}>Openfort</Text>
 				<Text style={styles.subtitle}>Embedded Wallet Sample</Text>
@@ -134,9 +132,9 @@ const styles = StyleSheet.create({
 		gap: spacing.sm,
 	},
 	logoImg: {
-		width: 132,
-		height: 80,
-		marginBottom: spacing.md,
+		width: 120,
+		height: 120,
+		marginBottom: spacing.sm,
 	},
 	title: {
 		fontSize: fontSize.display,

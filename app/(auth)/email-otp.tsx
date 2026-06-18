@@ -17,7 +17,7 @@ export default function EmailOtp() {
 	const [isSending, setIsSending] = useState(false);
 	const [isVerifying, setIsVerifying] = useState(false);
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
-	const { requestEmailOtp, signInEmailOtp } = useEmailAuthOtp();
+	const { requestEmailOtp, signInEmailOtp } = useEmailAuthOtp({ throwOnError: true });
 
 	const handleSendOtp = async () => {
 		if (!email.includes("@")) {
