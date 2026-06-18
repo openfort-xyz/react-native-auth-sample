@@ -1,86 +1,191 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEmailAuthOtp } from "@openfort/react-native";
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Button, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Header } from "@/components/ui/Header";
+import { Screen } from "@/components/ui/Screen";
+import { colors, fontFamily, fontSize, fontWeight, radius, spacing } from "@/constants/theme";
 
-export default function Index() {
+export default function EmailOtp() {
+	const router = useRouter();
 	const [hasSentOtp, setHasSentOtp] = useState(false);
 	const [email, setEmail] = useState("");
 	const [otp, setOtp] = useState("");
+	const [isSending, setIsSending] = useState(false);
+	const [isVerifying, setIsVerifying] = useState(false);
+	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 	const { requestEmailOtp, signInEmailOtp } = useEmailAuthOtp();
 
 	const handleSendOtp = async () => {
+		if (!email.includes("@")) {
+			setErrorMsg("Enter a valid email address");
+			return;
+		}
+		setErrorMsg(null);
+		setIsSending(true);
 		try {
-			await requestEmailOtp({
-				email,
-			});
-
+			await requestEmailOtp({ email });
 			setHasSentOtp(true);
 		} catch (error) {
 			console.error("Error sending OTP:", error);
+			setErrorMsg(error instanceof Error ? error.message : "Failed to send code");
+		} finally {
+			setIsSending(false);
+		}
+	};
+
+	const handleVerifyOtp = async () => {
+		setErrorMsg(null);
+		setIsVerifying(true);
+		try {
+			const response = await signInEmailOtp({ email, otp });
+			console.log("OTP verified successfully:", response);
+			// Navigation is handled automatically by the auth layout guard once the user is set.
+		} catch (error) {
+			console.error("Error verifying OTP:", error);
+			setErrorMsg(error instanceof Error ? error.message : "Invalid code, try again");
+		} finally {
+			setIsVerifying(false);
 		}
 	};
 
 	return (
-		<View
-			style={{
-				flex: 1,
-				justifyContent: "center",
-				alignItems: "center",
-				gap: 10,
-				marginHorizontal: 10,
-			}}
-		>
-			<TextInput
-				placeholder="Enter your email"
-				style={{
-					height: 40,
-					borderColor: "gray",
-					borderWidth: 1,
-					width: "100%",
-					paddingHorizontal: 10,
-				}}
-				onChangeText={setEmail}
-				value={email}
+		<Screen scroll>
+			<Header
+				title="Email login"
+				subtitle={
+					hasSentOtp ? `Enter the code sent to ${email}` : "We'll send a one-time code to your inbox"
+				}
+				onBack={() => router.back()}
 			/>
-			{hasSentOtp ? (
-				<>
+
+			<Card>
+				<Text style={styles.fieldLabel}>Email address</Text>
+				<View style={styles.inputWrap}>
+					<Ionicons name="mail-outline" size={18} color={colors.textTertiary} />
 					<TextInput
-						placeholder="Enter OTP here"
-						onChangeText={setOtp}
-						value={otp}
-						style={{
-							height: 40,
-							borderColor: "gray",
-							borderWidth: 1,
-							width: "100%",
-							paddingHorizontal: 10,
-						}}
+						placeholder="you@example.com"
+						placeholderTextColor={colors.textTertiary}
+						style={styles.input}
+						autoCapitalize="none"
+						autoCorrect={false}
+						keyboardType="email-address"
+						editable={!hasSentOtp && !isSending}
+						onChangeText={setEmail}
+						value={email}
 					/>
-					<Button
-						title="Verify OTP"
-						onPress={async () => {
-							try {
-								const response = await signInEmailOtp({
-									email,
-									otp,
-								});
-								console.log("OTP verified successfully:", response);
-							} catch (error) {
-								console.error("Error verifying OTP:", error);
-							}
-						}}
-					/>
-					<Button title="Resend OTP" onPress={() => handleSendOtp()} />
-				</>
-			) : (
-				<Button
-					title="Send OTP"
-					onPress={() => {
-						handleSendOtp();
-						setHasSentOtp(true);
-					}}
-				/>
-			)}
-		</View>
+					{hasSentOtp ? (
+						<Ionicons name="checkmark-circle" size={18} color={colors.success} />
+					) : null}
+				</View>
+
+				{hasSentOtp ? (
+					<>
+						<Text style={[styles.fieldLabel, styles.spaced]}>Verification code</Text>
+						<View style={styles.inputWrap}>
+							<Ionicons name="keypad-outline" size={18} color={colors.textTertiary} />
+							<TextInput
+								placeholder="123456"
+								placeholderTextColor={colors.textTertiary}
+								style={[styles.input, styles.otpInput]}
+								keyboardType="number-pad"
+								autoFocus
+								onChangeText={setOtp}
+								value={otp}
+							/>
+						</View>
+					</>
+				) : null}
+
+				{errorMsg ? (
+					<View style={styles.errorBox}>
+						<Ionicons name="alert-circle" size={15} color={colors.danger} />
+						<Text style={styles.errorText}>{errorMsg}</Text>
+					</View>
+				) : null}
+
+				<View style={styles.actions}>
+					{hasSentOtp ? (
+						<>
+							<Button
+								title="Verify & sign in"
+								icon="arrow-forward"
+								loading={isVerifying}
+								disabled={otp.length === 0}
+								fullWidth
+								onPress={handleVerifyOtp}
+							/>
+							<Button
+								title="Resend code"
+								variant="ghost"
+								loading={isSending}
+								fullWidth
+								onPress={handleSendOtp}
+							/>
+						</>
+					) : (
+						<Button
+							title="Send code"
+							icon="paper-plane-outline"
+							loading={isSending}
+							disabled={email.length === 0}
+							fullWidth
+							onPress={handleSendOtp}
+						/>
+					)}
+				</View>
+			</Card>
+		</Screen>
 	);
 }
+
+const styles = StyleSheet.create({
+	fieldLabel: {
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.semibold,
+		color: colors.textSecondary,
+		marginBottom: spacing.sm,
+	},
+	spaced: {
+		marginTop: spacing.lg,
+	},
+	inputWrap: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.sm,
+		backgroundColor: colors.inputBg,
+		borderRadius: radius.md,
+		borderWidth: 1,
+		borderColor: colors.border,
+		paddingHorizontal: spacing.md,
+	},
+	input: {
+		flex: 1,
+		paddingVertical: 14,
+		fontSize: fontSize.md,
+		color: colors.text,
+	},
+	otpInput: {
+		fontFamily: fontFamily.mono,
+		letterSpacing: 4,
+	},
+	errorBox: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.sm,
+		marginTop: spacing.md,
+	},
+	errorText: {
+		flex: 1,
+		color: colors.danger,
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.medium,
+	},
+	actions: {
+		marginTop: spacing.xl,
+		gap: spacing.sm,
+	},
+});
