@@ -8,11 +8,5 @@ export default function AppLayout() {
 		return <Redirect href="/(auth)/auth" />;
 	}
 
-	return (
-		<Stack
-			screenOptions={{
-				headerTitle: "Openfort Embedded Wallet Sample",
-			}}
-		/>
-	);
+	return <Stack screenOptions={{ headerShown: false }} />;
 }

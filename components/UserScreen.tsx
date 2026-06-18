@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import {
 	type ConnectedEmbeddedEthereumWallet,
 	type OAuthProvider,
@@ -9,20 +10,40 @@ import {
 	useUser,
 } from "@openfort/react-native";
 import * as Clipboard from "expo-clipboard";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Alert,
-	Button,
 	Modal,
-	ScrollView,
+	Pressable,
 	StyleSheet,
 	Text,
 	TextInput,
-	TouchableOpacity,
 	View,
 } from "react-native";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Header } from "@/components/ui/Header";
+import { Screen } from "@/components/ui/Screen";
+import { SocialButton } from "@/components/ui/SocialButton";
+import {
+	colors,
+	fontFamily,
+	fontSize,
+	fontWeight,
+	type OAuthProviderId,
+	radius,
+	spacing,
+} from "@/constants/theme";
 
 type ChainTab = "ethereum" | "solana";
+
+const LINK_PROVIDERS: OAuthProviderId[] = ["google", "twitter", "discord", "apple"];
+
+const recoveryColor: Record<string, string> = {
+	automatic: colors.primary,
+	password: colors.warning,
+	passkey: colors.success,
+};
 
 export const UserScreen = () => {
 	const [activeTab, setActiveTab] = useState<ChainTab>("ethereum");
@@ -33,6 +54,8 @@ export const UserScreen = () => {
 	const [password, setPassword] = useState("");
 	const [recoverWalletAddress, setRecoverWalletAddress] = useState<string | null>(null);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+	const [copiedKey, setCopiedKey] = useState<string | null>(null);
+	const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const { signOut } = useSignOut();
 	const { user } = useUser();
@@ -60,6 +83,17 @@ export const UserScreen = () => {
 		exportPrivateKey: solExportPrivateKey,
 	} = useEmbeddedSolanaWallet();
 
+	useEffect(() => () => {
+		if (copyTimer.current) clearTimeout(copyTimer.current);
+	}, []);
+
+	const handleCopy = useCallback(async (value: string, key: string) => {
+		await Clipboard.setStringAsync(value);
+		setCopiedKey(key);
+		if (copyTimer.current) clearTimeout(copyTimer.current);
+		copyTimer.current = setTimeout(() => setCopiedKey(null), 1500);
+	}, []);
+
 	const signMessage = useCallback(async () => {
 		try {
 			if (!ethActiveWallet) {
@@ -67,15 +101,46 @@ export const UserScreen = () => {
 				return;
 			}
 			const provider = await ethActiveWallet.getProvider();
-			const message = await provider.request({
+			const from = ethActiveWallet.address;
+
+			// personal_sign repro: a plain UTF-8 (SIWE-style) message vs its 0x-hex
+			// encoding. EIP-191 hashes the SAME bytes either way, so a correct SDK
+			// signs them identically. The hex form was always handled right → it's the
+			// reference; if the plain form differs, plain-string personal_sign is
+			// broken (run through hexToString and mangled before hashing).
+			const message = "openfort.io wants you to sign in with your Ethereum account";
+			const toHex = (s: string) => {
+				const utf8 = encodeURIComponent(s).replace(/%([0-9A-F]{2})/g, (_, h) =>
+					String.fromCharCode(parseInt(h, 16)),
+				);
+				let out = "0x";
+				for (let i = 0; i < utf8.length; i++) {
+					out += utf8.charCodeAt(i).toString(16).padStart(2, "0");
+				}
+				return out;
+			};
+
+			const sigPlain = (await provider.request({
 				method: "personal_sign",
-				params: [`0x0${Date.now()}`, ethActiveWallet?.address],
-			});
-			if (message && typeof message === "string") {
-				Alert.alert("Success", `Message signed: ${message.slice(0, 20)}...`);
-			}
+				params: [message, from],
+			})) as string;
+			const sigHex = (await provider.request({
+				method: "personal_sign",
+				params: [toHex(message), from],
+			})) as string;
+
+			const ok = sigPlain === sigHex;
+			console.log("[personal_sign] plain:", sigPlain);
+			console.log("[personal_sign] hex:  ", sigHex);
+			Alert.alert(
+				ok ? "✅ personal_sign OK" : "❌ personal_sign BUG",
+				ok
+					? `Plain UTF-8 and hex encodings produced the SAME signature.\n\n${sigPlain.slice(0, 26)}…`
+					: `Plain UTF-8 signs DIFFERENTLY from its hex encoding — plain-string personal_sign is broken.\n\nplain: ${sigPlain.slice(0, 26)}…\nhex:   ${sigHex.slice(0, 26)}…`,
+			);
 		} catch (error) {
 			console.error("[UserScreen] Sign message error:", error);
+			Alert.alert("Error", error instanceof Error ? error.message : String(error));
 		}
 	}, [ethActiveWallet]);
 
@@ -115,39 +180,23 @@ export const UserScreen = () => {
 	);
 
 	const handleCreateWalletAutomatic = () => {
-		if (activeTab === "ethereum") {
-			ethCreate({
-				recoveryMethod: "automatic",
-				onError: (error: Error) => Alert.alert("Error", error.message),
-				onSuccess: ({ account }: { account?: { address?: string } }) =>
-					Alert.alert("Success", `ETH wallet created: ${account?.address}`),
-			});
-		} else {
-			solCreate({
-				recoveryMethod: "automatic",
-				onError: (error: Error) => Alert.alert("Error", error.message),
-				onSuccess: ({ account }: { account?: { address?: string } }) =>
-					Alert.alert("Success", `SOL wallet created: ${account?.address}`),
-			});
-		}
+		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
+		createFn({
+			recoveryMethod: "automatic",
+			onError: (error: Error) => Alert.alert("Error", error.message),
+			onSuccess: ({ account }: { account?: { address?: string } }) =>
+				Alert.alert("Success", `Wallet created: ${account?.address}`),
+		});
 	};
 
 	const handleCreateWalletWithPasskey = () => {
-		if (activeTab === "ethereum") {
-			ethCreate({
-				recoveryMethod: "passkey",
-				onError: (error: Error) => Alert.alert("Error", error.message),
-				onSuccess: ({ account }: { account?: { address?: string } }) =>
-					Alert.alert("Success", `ETH wallet created: ${account?.address}`),
-			});
-		} else {
-			solCreate({
-				recoveryMethod: "passkey",
-				onError: (error: Error) => Alert.alert("Error", error.message),
-				onSuccess: ({ account }: { account?: { address?: string } }) =>
-					Alert.alert("Success", `SOL wallet created: ${account?.address}`),
-			});
-		}
+		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
+		createFn({
+			recoveryMethod: "passkey",
+			onError: (error: Error) => Alert.alert("Error", error.message),
+			onSuccess: ({ account }: { account?: { address?: string } }) =>
+				Alert.alert("Success", `Wallet created: ${account?.address}`),
+		});
 	};
 
 	const handleCreateWalletWithPassword = () => {
@@ -184,44 +233,35 @@ export const UserScreen = () => {
 			return;
 		}
 		setIsPasswordLoading(true);
+		const onError = (error: Error) => {
+			setIsPasswordLoading(false);
+			setPassword("");
+			setRecoverWalletAddress(null);
+			Alert.alert("Error", error.message);
+		};
+		const onSuccess = () => {
+			setIsPasswordLoading(false);
+			setPasswordModalVisible(false);
+			setPassword("");
+			setRecoverWalletAddress(null);
+			Alert.alert("Success", "Wallet recovered successfully");
+		};
 		if (activeTab === "ethereum") {
 			ethSetActive({
 				address: recoverWalletAddress as `0x${string}`,
 				chainId: Number(chainId),
 				recoveryMethod: "password",
 				recoveryPassword: password,
-				onError: (error: Error) => {
-					setIsPasswordLoading(false);
-					setPassword("");
-					setRecoverWalletAddress(null);
-					Alert.alert("Error", error.message);
-				},
-				onSuccess: () => {
-					setIsPasswordLoading(false);
-					setPasswordModalVisible(false);
-					setPassword("");
-					setRecoverWalletAddress(null);
-					Alert.alert("Success", "Wallet recovered successfully");
-				},
+				onError,
+				onSuccess,
 			});
 		} else {
 			solSetActive({
 				address: recoverWalletAddress,
 				recoveryMethod: "password",
 				recoveryPassword: password,
-				onError: (error: Error) => {
-					setIsPasswordLoading(false);
-					setPassword("");
-					setRecoverWalletAddress(null);
-					Alert.alert("Error", error.message);
-				},
-				onSuccess: () => {
-					setIsPasswordLoading(false);
-					setPasswordModalVisible(false);
-					setPassword("");
-					setRecoverWalletAddress(null);
-					Alert.alert("Success", "Wallet recovered successfully");
-				},
+				onError,
+				onSuccess,
 			});
 		}
 	};
@@ -229,12 +269,38 @@ export const UserScreen = () => {
 	const openPasswordModal = (mode: "create" | "recover", walletAddress?: string) => {
 		setPasswordModalMode(mode);
 		setPassword("");
-		if (mode === "recover" && walletAddress) {
-			setRecoverWalletAddress(walletAddress);
-		} else {
-			setRecoverWalletAddress(null);
-		}
+		setRecoverWalletAddress(mode === "recover" && walletAddress ? walletAddress : null);
 		setPasswordModalVisible(true);
+	};
+
+	const connectWallet = (address: string, recoveryMethod?: string) => {
+		if (recoveryMethod === "password") {
+			openPasswordModal("recover", address);
+			return;
+		}
+		setConnectingWalletAddress(address);
+		const onSuccess = () => setConnectingWalletAddress(null);
+		const onError = (error: Error) => {
+			setConnectingWalletAddress(null);
+			Alert.alert("Error", error.message);
+		};
+		if (activeTab === "ethereum") {
+			ethSetActive({ address: address as `0x${string}`, chainId: Number(chainId), onSuccess, onError });
+		} else {
+			solSetActive({ address, onSuccess, onError });
+		}
+	};
+
+	const exportKey = async () => {
+		try {
+			const key = await (activeTab === "ethereum" ? ethExportPrivateKey : solExportPrivateKey)();
+			Alert.alert("Private Key", key, [
+				{ text: "Copy", onPress: () => Clipboard.setStringAsync(key) },
+				{ text: "OK" },
+			]);
+		} catch (error) {
+			Alert.alert("Error", error instanceof Error ? error.message : "Failed to export key");
+		}
 	};
 
 	if (!user) {
@@ -244,501 +310,621 @@ export const UserScreen = () => {
 	const wallets = activeTab === "ethereum" ? ethWallets : solWallets;
 	const activeWallet = activeTab === "ethereum" ? ethActiveWallet : solActiveWallet;
 	const status = activeTab === "ethereum" ? ethStatus : solStatus;
-	const exportPrivateKey = activeTab === "ethereum" ? ethExportPrivateKey : solExportPrivateKey;
+	const chainLabel = activeTab === "ethereum" ? "Ethereum" : "Solana";
+	const accent = activeTab === "ethereum" ? colors.ethereum : colors.solana;
+	const isCreating = status === "creating";
 
 	return (
-		<ScrollView style={styles.container}>
-			{/* OAuth Linking */}
-			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>Link Accounts</Text>
-				<View style={styles.buttonRow}>
-					{(["twitter", "google", "discord", "apple"] as const).map(
-						(provider) => (
-							<TouchableOpacity
+		<Screen scroll>
+			<Header
+				title="Your wallet"
+				subtitle="Manage embedded wallets & accounts"
+				right={
+					<Pressable
+						accessibilityRole="button"
+						accessibilityLabel="Sign out"
+						hitSlop={8}
+						onPress={() =>
+							Alert.alert("Sign out", "Are you sure you want to sign out?", [
+								{ text: "Cancel", style: "cancel" },
+								{ text: "Sign out", style: "destructive", onPress: () => signOut() },
+							])
+						}
+						style={({ pressed }) => [styles.logout, pressed && styles.pressed]}
+					>
+						<Ionicons name="log-out-outline" size={20} color={colors.danger} />
+					</Pressable>
+				}
+			/>
+
+			<View style={styles.stack}>
+				<Card title="Account">
+					<Text style={styles.label}>User ID</Text>
+					<CopyRow
+						value={user.id}
+						copied={copiedKey === "uid"}
+						onCopy={() => handleCopy(user.id, "uid")}
+					/>
+				</Card>
+
+				<Card title="Link accounts">
+					<View style={styles.chipRow}>
+						{LINK_PROVIDERS.map((provider) => (
+							<SocialButton
 								key={provider}
-								style={styles.smallButton}
+								provider={provider}
+								layout="chip"
 								disabled={isOAuthLoading}
 								onPress={async () => {
 									try {
 										await linkOauth({ provider: provider as OAuthProvider });
 									} catch {
-										// Ignore
+										// Ignore — surfaced by the hook
 									}
-								}}
-							>
-								<Text style={styles.smallButtonText}>
-									{provider.charAt(0).toUpperCase() + provider.slice(1)}
-								</Text>
-							</TouchableOpacity>
-						),
-					)}
-				</View>
-			</View>
-
-			{/* User Info */}
-			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>User</Text>
-				<Text style={styles.label}>User ID</Text>
-				<Text style={styles.value}>{user.id}</Text>
-			</View>
-
-			{/* Chain Tab Switcher */}
-			<View style={styles.tabRow}>
-				<TouchableOpacity
-					style={[styles.tab, activeTab === "ethereum" && styles.activeTab]}
-					onPress={() => setActiveTab("ethereum")}
-				>
-					<Text style={[styles.tabText, activeTab === "ethereum" && styles.activeTabText]}>
-						Ethereum
-					</Text>
-				</TouchableOpacity>
-				<TouchableOpacity
-					style={[styles.tab, activeTab === "solana" && styles.activeTab]}
-					onPress={() => setActiveTab("solana")}
-				>
-					<Text style={[styles.tabText, activeTab === "solana" && styles.activeTabText]}>
-						Solana
-					</Text>
-				</TouchableOpacity>
-			</View>
-
-			{/* Active Wallet */}
-			{activeWallet?.address && (
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>
-						Active {activeTab === "ethereum" ? "Ethereum" : "Solana"} Wallet
-					</Text>
-					<Text style={styles.walletAddress}>{activeWallet.address}</Text>
-					{activeTab === "ethereum" && (
-						<Text style={styles.chainText}>
-							Chain: {isSwitchingChain ? "Switching..." : chainId}
-						</Text>
-					)}
-					<View style={styles.buttonRow}>
-						<Button
-							title="Sign Message"
-							onPress={activeTab === "ethereum" ? signMessage : signSolanaMessage}
-						/>
-						<Button
-							title="Export Key"
-							onPress={async () => {
-								try {
-									const key = await exportPrivateKey();
-									Alert.alert("Private Key", key, [
-										{ text: "Copy", onPress: () => Clipboard.setStringAsync(key) },
-										{ text: "OK" },
-									]);
-								} catch (error) {
-									Alert.alert("Error", error instanceof Error ? error.message : "Failed to export key");
-								}
-							}}
-						/>
-						{activeTab === "ethereum" && ethActiveWallet && (
-							<Button
-								title={`Switch to ${chainId === "11155111" ? "Base" : "Sepolia"}`}
-								onPress={() => {
-									const newChain = chainId === "11155111" ? "84532" : "11155111";
-									switchChain(ethActiveWallet, newChain);
-									setChainId(newChain);
 								}}
 							/>
-						)}
+						))}
 					</View>
-				</View>
-			)}
+				</Card>
 
-			{/* Wallets */}
-			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>
-					{activeTab === "ethereum" ? "Ethereum" : "Solana"} Wallets
-				</Text>
+				<ChainSegments activeTab={activeTab} onChange={setActiveTab} />
 
-				{wallets.length > 0 ? (
-					wallets.map((w: { address: string; recoveryMethod?: string }) => (
-						<View key={w.address} style={styles.walletItem}>
-							<View style={styles.walletInfo}>
-								<Text style={styles.walletItemAddress}>
-									{w.address.slice(0, 8)}...{w.address.slice(-6)}
-								</Text>
-								<Text style={styles.walletRecoveryMethod}>
-									Recovery: {w.recoveryMethod ?? "unknown"}
-								</Text>
-							</View>
-							<TouchableOpacity
-								style={[
-									styles.connectButton,
-									activeWallet?.address === w.address && styles.activeButton,
-								]}
-								disabled={
-									activeWallet?.address === w.address || status === "connecting"
-								}
-								onPress={() => {
-									if (w.recoveryMethod === "password") {
-										openPasswordModal("recover", w.address);
-									} else if (activeTab === "ethereum") {
-										setConnectingWalletAddress(w.address);
-										ethSetActive({
-											address: w.address as `0x${string}`,
-											chainId: Number(chainId),
-											onSuccess: () => setConnectingWalletAddress(null),
-											onError: (error: Error) => {
-												setConnectingWalletAddress(null);
-												Alert.alert("Error", error.message);
-											},
-										});
-									} else {
-										setConnectingWalletAddress(w.address);
-										solSetActive({
-											address: w.address,
-											onSuccess: () => setConnectingWalletAddress(null),
-											onError: (error: Error) => {
-												setConnectingWalletAddress(null);
-												Alert.alert("Error", error.message);
-											},
-										});
-									}
-								}}
-							>
-								<Text style={styles.connectButtonText}>
-									{activeWallet?.address === w.address
-										? "Active"
-										: connectingWalletAddress === w.address
-											? "Connecting..."
-											: "Connect"}
-								</Text>
-							</TouchableOpacity>
-						</View>
-					))
-				) : (
-					<Text style={styles.emptyText}>No wallets yet</Text>
-				)}
-
-				{/* Create Wallet Options */}
-				<View style={styles.createButtons}>
-					<Text style={styles.createTitle}>
-						Create {activeTab === "ethereum" ? "Ethereum" : "Solana"} Wallet
-					</Text>
-
-					<TouchableOpacity
-						style={[styles.createOption, status === "creating" && styles.disabledOption]}
-						disabled={status === "creating"}
-						onPress={handleCreateWalletAutomatic}
-					>
-						<Text style={styles.createOptionTitle}>Automatic</Text>
-						<Text style={styles.createOptionDesc}>No user input required</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={[styles.createOption, status === "creating" && styles.disabledOption]}
-						disabled={status === "creating"}
-						onPress={() => openPasswordModal("create")}
-					>
-						<Text style={styles.createOptionTitle}>Password</Text>
-						<Text style={styles.createOptionDesc}>Recover wallet with your password</Text>
-					</TouchableOpacity>
-
-					{isSupported && (
-						<TouchableOpacity
-							style={[styles.createOption, status === "creating" && styles.disabledOption]}
-							disabled={status === "creating"}
-							onPress={handleCreateWalletWithPasskey}
-						>
-							<Text style={styles.createOptionTitle}>Passkey</Text>
-							<Text style={styles.createOptionDesc}>Recover wallet with biometrics</Text>
-						</TouchableOpacity>
-					)}
-
-					{!isSupported && (
-						<Text style={styles.prfStatus}>
-							Passkeys not available on this device
-						</Text>
-					)}
-				</View>
-			</View>
-
-			{/* Password Modal */}
-			<Modal
-				visible={passwordModalVisible}
-				transparent
-				animationType="fade"
-				onRequestClose={() => setPasswordModalVisible(false)}
-			>
-				<View style={styles.modalOverlay}>
-					<View style={styles.modalContent}>
-						<Text style={styles.modalTitle}>
-							{passwordModalMode === "create" ? "Create Wallet" : "Recover Wallet"}
-						</Text>
-						<Text style={styles.modalSubtitle}>
-							{passwordModalMode === "create"
-								? "Enter a password to secure your wallet"
-								: "Enter your password to recover your wallet"}
-						</Text>
-						<TextInput
-							style={styles.passwordInput}
-							placeholder="Enter password"
-							secureTextEntry
-							value={password}
-							onChangeText={setPassword}
-							autoFocus
+				{activeWallet?.address ? (
+					<Card title={`Active ${chainLabel} wallet`} right={<ChainBadge label={chainLabel} color={accent} />}>
+						<CopyRow
+							value={activeWallet.address}
+							copied={copiedKey === "active"}
+							onCopy={() => handleCopy(activeWallet.address, "active")}
 						/>
-						<View style={styles.modalButtons}>
-							<TouchableOpacity
-								style={styles.modalCancelButton}
-								disabled={isPasswordLoading}
-								onPress={() => {
-									setPasswordModalVisible(false);
-									setPassword("");
-									setRecoverWalletAddress(null);
-								}}
-							>
-								<Text style={[styles.modalCancelText, isPasswordLoading && styles.disabledText]}>Cancel</Text>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={[styles.modalConfirmButton, isPasswordLoading && styles.disabledButton]}
-								disabled={isPasswordLoading}
-								onPress={passwordModalMode === "create" ? handleCreateWalletWithPassword : handleRecoverWalletWithPassword}
-							>
-								<Text style={styles.modalConfirmText}>
-									{isPasswordLoading ? "Loading..." : (passwordModalMode === "create" ? "Create" : "Recover")}
-								</Text>
-							</TouchableOpacity>
+						{activeTab === "ethereum" ? (
+							<Text style={styles.chainText}>
+								Chain ID · {isSwitchingChain ? "switching…" : chainId}
+							</Text>
+						) : null}
+						<View style={styles.actionRow}>
+							<Button
+								title="Sign"
+								icon="create-outline"
+								variant="secondary"
+								size="sm"
+								onPress={activeTab === "ethereum" ? signMessage : signSolanaMessage}
+							/>
+							<Button title="Export key" icon="key-outline" variant="secondary" size="sm" onPress={exportKey} />
+							{activeTab === "ethereum" && ethActiveWallet ? (
+								<Button
+									title={chainId === "11155111" ? "→ Base" : "→ Sepolia"}
+									icon="swap-horizontal"
+									variant="ghost"
+									size="sm"
+									onPress={() => {
+										const newChain = chainId === "11155111" ? "84532" : "11155111";
+										switchChain(ethActiveWallet, newChain);
+										setChainId(newChain);
+									}}
+								/>
+							) : null}
 						</View>
-					</View>
-				</View>
-			</Modal>
+					</Card>
+				) : null}
 
-			{/* Logout */}
-			<View style={styles.section}>
-				<Button title="Logout" color="#c44" onPress={() => signOut()} />
+				<Card title={`${chainLabel} wallets`}>
+					{wallets.length > 0 ? (
+						wallets.map((w: { address: string; recoveryMethod?: string }) => (
+							<WalletRow
+								key={w.address}
+								address={w.address}
+								recoveryMethod={w.recoveryMethod}
+								isActive={activeWallet?.address === w.address}
+								isConnecting={connectingWalletAddress === w.address}
+								disabled={activeWallet?.address === w.address || status === "connecting"}
+								onPress={() => connectWallet(w.address, w.recoveryMethod)}
+							/>
+						))
+					) : (
+						<View style={styles.empty}>
+							<Ionicons name="wallet-outline" size={26} color={colors.textTertiary} />
+							<Text style={styles.emptyText}>No {chainLabel.toLowerCase()} wallets yet</Text>
+						</View>
+					)}
+
+					<View style={styles.divider} />
+					<Text style={styles.createTitle}>Create new wallet</Text>
+					<CreateOption
+						icon="flash-outline"
+						title="Automatic"
+						desc="No user input required"
+						disabled={isCreating}
+						onPress={handleCreateWalletAutomatic}
+					/>
+					<CreateOption
+						icon="lock-closed-outline"
+						title="Password"
+						desc="Recover with your password"
+						disabled={isCreating}
+						onPress={() => openPasswordModal("create")}
+					/>
+					{isSupported ? (
+						<CreateOption
+							icon="finger-print"
+							title="Passkey"
+							desc="Recover with biometrics"
+							disabled={isCreating}
+							onPress={handleCreateWalletWithPasskey}
+						/>
+					) : (
+						<Text style={styles.prfStatus}>Passkeys not available on this device</Text>
+					)}
+				</Card>
 			</View>
-		</ScrollView>
+
+			<PasswordModal
+				visible={passwordModalVisible}
+				mode={passwordModalMode}
+				password={password}
+				loading={isPasswordLoading}
+				onChangePassword={setPassword}
+				onCancel={() => {
+					setPasswordModalVisible(false);
+					setPassword("");
+					setRecoverWalletAddress(null);
+				}}
+				onConfirm={
+					passwordModalMode === "create" ? handleCreateWalletWithPassword : handleRecoverWalletWithPassword
+				}
+			/>
+		</Screen>
 	);
 };
 
+function CopyRow({ value, copied, onCopy }: { value: string; copied: boolean; onCopy: () => void }) {
+	return (
+		<Pressable
+			accessibilityRole="button"
+			accessibilityLabel="Copy to clipboard"
+			onPress={onCopy}
+			style={({ pressed }) => [styles.copyRow, pressed && styles.pressed]}
+		>
+			<Text style={styles.mono} numberOfLines={1} ellipsizeMode="middle">
+				{value}
+			</Text>
+			<Ionicons
+				name={copied ? "checkmark-circle" : "copy-outline"}
+				size={16}
+				color={copied ? colors.success : colors.textTertiary}
+			/>
+		</Pressable>
+	);
+}
+
+function ChainSegments({
+	activeTab,
+	onChange,
+}: {
+	activeTab: ChainTab;
+	onChange: (tab: ChainTab) => void;
+}) {
+	const segments: { key: ChainTab; label: string; color: string }[] = [
+		{ key: "ethereum", label: "Ethereum", color: colors.ethereum },
+		{ key: "solana", label: "Solana", color: colors.solana },
+	];
+	return (
+		<View style={styles.segments}>
+			{segments.map((s) => {
+				const active = activeTab === s.key;
+				return (
+					<Pressable
+						key={s.key}
+						accessibilityRole="tab"
+						accessibilityState={{ selected: active }}
+						onPress={() => onChange(s.key)}
+						style={[styles.segment, active && { backgroundColor: s.color }]}
+					>
+						<Text style={[styles.segmentText, active && styles.segmentTextActive]}>{s.label}</Text>
+					</Pressable>
+				);
+			})}
+		</View>
+	);
+}
+
+function ChainBadge({ label, color }: { label: string; color: string }) {
+	return (
+		<View style={[styles.badge, { backgroundColor: `${color}1A` }]}>
+			<View style={[styles.badgeDot, { backgroundColor: color }]} />
+			<Text style={[styles.badgeText, { color }]}>{label}</Text>
+		</View>
+	);
+}
+
+function RecoveryBadge({ method }: { method?: string }) {
+	const label = method ?? "unknown";
+	const color = recoveryColor[label] ?? colors.textTertiary;
+	return (
+		<View style={[styles.recoveryBadge, { backgroundColor: `${color}1A` }]}>
+			<Text style={[styles.recoveryText, { color }]}>{label}</Text>
+		</View>
+	);
+}
+
+function WalletRow({
+	address,
+	recoveryMethod,
+	isActive,
+	isConnecting,
+	disabled,
+	onPress,
+}: {
+	address: string;
+	recoveryMethod?: string;
+	isActive: boolean;
+	isConnecting: boolean;
+	disabled: boolean;
+	onPress: () => void;
+}) {
+	return (
+		<View style={styles.walletRow}>
+			<View style={styles.walletInfo}>
+				<Text style={styles.walletAddress}>
+					{address.slice(0, 8)}…{address.slice(-6)}
+				</Text>
+				<RecoveryBadge method={recoveryMethod} />
+			</View>
+			<Pressable
+				accessibilityRole="button"
+				disabled={disabled}
+				onPress={onPress}
+				style={({ pressed }) => [
+					styles.connectBtn,
+					isActive && styles.connectBtnActive,
+					pressed && !disabled && styles.pressed,
+				]}
+			>
+				{isActive ? <Ionicons name="checkmark" size={14} color={colors.success} /> : null}
+				<Text style={[styles.connectText, isActive && styles.connectTextActive]}>
+					{isActive ? "Active" : isConnecting ? "Connecting…" : "Connect"}
+				</Text>
+			</Pressable>
+		</View>
+	);
+}
+
+function CreateOption({
+	icon,
+	title,
+	desc,
+	disabled,
+	onPress,
+}: {
+	icon: keyof typeof Ionicons.glyphMap;
+	title: string;
+	desc: string;
+	disabled: boolean;
+	onPress: () => void;
+}) {
+	return (
+		<Pressable
+			accessibilityRole="button"
+			disabled={disabled}
+			onPress={onPress}
+			style={({ pressed }) => [
+				styles.createOption,
+				disabled && styles.disabledOption,
+				pressed && !disabled && styles.pressed,
+			]}
+		>
+			<View style={styles.createIcon}>
+				<Ionicons name={icon} size={18} color={colors.primary} />
+			</View>
+			<View style={styles.flex}>
+				<Text style={styles.createOptionTitle}>{title}</Text>
+				<Text style={styles.createOptionDesc}>{desc}</Text>
+			</View>
+			<Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+		</Pressable>
+	);
+}
+
+function PasswordModal({
+	visible,
+	mode,
+	password,
+	loading,
+	onChangePassword,
+	onCancel,
+	onConfirm,
+}: {
+	visible: boolean;
+	mode: "create" | "recover";
+	password: string;
+	loading: boolean;
+	onChangePassword: (value: string) => void;
+	onCancel: () => void;
+	onConfirm: () => void;
+}) {
+	return (
+		<Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+			<View style={styles.modalOverlay}>
+				<View style={styles.modalContent}>
+					<View style={styles.modalIcon}>
+						<Ionicons name="lock-closed" size={22} color={colors.primary} />
+					</View>
+					<Text style={styles.modalTitle}>{mode === "create" ? "Secure your wallet" : "Recover wallet"}</Text>
+					<Text style={styles.modalSubtitle}>
+						{mode === "create"
+							? "Choose a password to encrypt your wallet"
+							: "Enter your password to recover this wallet"}
+					</Text>
+					<TextInput
+						style={styles.passwordInput}
+						placeholder="Enter password"
+						placeholderTextColor={colors.textTertiary}
+						secureTextEntry
+						value={password}
+						onChangeText={onChangePassword}
+						autoFocus
+					/>
+					<View style={styles.modalButtons}>
+						<Button title="Cancel" variant="ghost" disabled={loading} onPress={onCancel} style={styles.flex} />
+						<Button
+							title={mode === "create" ? "Create" : "Recover"}
+							loading={loading}
+							onPress={onConfirm}
+							style={styles.flex}
+						/>
+					</View>
+				</View>
+			</View>
+		</Modal>
+	);
+}
+
 const styles = StyleSheet.create({
-	container: {
+	stack: {
+		gap: spacing.md,
+	},
+	flex: {
 		flex: 1,
-		backgroundColor: "#f5f5f5",
 	},
-	section: {
-		backgroundColor: "#fff",
-		margin: 10,
-		padding: 15,
-		borderRadius: 8,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.1,
-		shadowRadius: 2,
-		elevation: 2,
+	pressed: {
+		opacity: 0.6,
 	},
-	sectionTitle: {
-		fontSize: 16,
-		fontWeight: "bold",
-		marginBottom: 10,
-		color: "#333",
+	logout: {
+		width: 36,
+		height: 36,
+		borderRadius: radius.md,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: colors.dangerSoft,
 	},
 	label: {
-		fontSize: 12,
-		color: "#666",
-		marginBottom: 2,
+		fontSize: fontSize.sm,
+		color: colors.textSecondary,
+		marginBottom: spacing.sm,
 	},
-	value: {
-		fontSize: 14,
-		color: "#333",
-	},
-	tabRow: {
-		flexDirection: "row",
-		marginHorizontal: 10,
-		marginTop: 10,
-		borderRadius: 8,
-		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: "#007AFF",
-	},
-	tab: {
-		flex: 1,
-		paddingVertical: 10,
-		alignItems: "center",
-		backgroundColor: "#fff",
-	},
-	activeTab: {
-		backgroundColor: "#007AFF",
-	},
-	tabText: {
-		fontSize: 14,
-		fontWeight: "600",
-		color: "#007AFF",
-	},
-	activeTabText: {
-		color: "#fff",
-	},
-	buttonRow: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 8,
-	},
-	smallButton: {
-		backgroundColor: "#007AFF",
-		paddingHorizontal: 12,
-		paddingVertical: 8,
-		borderRadius: 6,
-	},
-	smallButtonText: {
-		color: "#fff",
-		fontSize: 12,
-		fontWeight: "600",
-	},
-	walletAddress: {
-		fontSize: 12,
-		fontFamily: "monospace",
-		color: "#333",
-		marginBottom: 8,
-	},
-	chainText: {
-		fontSize: 12,
-		color: "#666",
-		marginBottom: 10,
-	},
-	walletItem: {
+	copyRow: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingVertical: 8,
-		borderBottomWidth: 1,
-		borderBottomColor: "#eee",
+		gap: spacing.md,
+		backgroundColor: colors.cardMuted,
+		borderRadius: radius.md,
+		paddingVertical: spacing.md,
+		paddingHorizontal: spacing.md,
+	},
+	mono: {
+		flex: 1,
+		fontFamily: fontFamily.mono,
+		fontSize: fontSize.sm,
+		color: colors.text,
+	},
+	chipRow: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: spacing.sm,
+	},
+	chainText: {
+		fontSize: fontSize.sm,
+		color: colors.textSecondary,
+		marginTop: spacing.md,
+	},
+	actionRow: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: spacing.sm,
+		marginTop: spacing.lg,
+	},
+	segments: {
+		flexDirection: "row",
+		backgroundColor: colors.cardMuted,
+		borderRadius: radius.md,
+		padding: spacing.xs,
+		gap: spacing.xs,
+		borderWidth: StyleSheet.hairlineWidth,
+		borderColor: colors.border,
+	},
+	segment: {
+		flex: 1,
+		paddingVertical: spacing.md,
+		alignItems: "center",
+		borderRadius: radius.sm,
+	},
+	segmentText: {
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.semibold,
+		color: colors.textSecondary,
+	},
+	segmentTextActive: {
+		color: colors.textInverse,
+	},
+	badge: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.xs,
+		paddingVertical: 4,
+		paddingHorizontal: spacing.sm,
+		borderRadius: radius.pill,
+	},
+	badgeDot: {
+		width: 6,
+		height: 6,
+		borderRadius: 3,
+	},
+	badgeText: {
+		fontSize: fontSize.xs,
+		fontWeight: fontWeight.bold,
+	},
+	walletRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingVertical: spacing.md,
+		borderBottomWidth: StyleSheet.hairlineWidth,
+		borderBottomColor: colors.divider,
 	},
 	walletInfo: {
 		flex: 1,
+		gap: spacing.xs,
+		alignItems: "flex-start",
 	},
-	walletItemAddress: {
-		fontSize: 12,
-		fontFamily: "monospace",
-		color: "#333",
+	walletAddress: {
+		fontSize: fontSize.sm,
+		fontFamily: fontFamily.mono,
+		color: colors.text,
 	},
-	walletRecoveryMethod: {
-		fontSize: 10,
-		color: "#666",
-		marginTop: 2,
+	connectBtn: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.xs,
+		backgroundColor: colors.primary,
+		paddingHorizontal: spacing.lg,
+		paddingVertical: spacing.sm,
+		borderRadius: radius.pill,
 	},
-	connectButton: {
-		backgroundColor: "#007AFF",
-		paddingHorizontal: 12,
-		paddingVertical: 6,
-		borderRadius: 4,
+	connectBtnActive: {
+		backgroundColor: colors.successSoft,
 	},
-	activeButton: {
-		backgroundColor: "#4CAF50",
+	connectText: {
+		color: colors.textInverse,
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.semibold,
 	},
-	connectButtonText: {
-		color: "#fff",
-		fontSize: 12,
-		fontWeight: "600",
+	connectTextActive: {
+		color: colors.success,
+	},
+	empty: {
+		alignItems: "center",
+		gap: spacing.sm,
+		paddingVertical: spacing.xl,
 	},
 	emptyText: {
-		color: "#999",
-		fontStyle: "italic",
-		textAlign: "center",
-		paddingVertical: 10,
+		color: colors.textTertiary,
+		fontSize: fontSize.sm,
 	},
-	prfStatus: {
-		fontSize: 10,
-		color: "#666",
-		marginTop: 10,
-		fontStyle: "italic",
-	},
-	createButtons: {
-		marginTop: 15,
+	divider: {
+		height: StyleSheet.hairlineWidth,
+		backgroundColor: colors.divider,
+		marginVertical: spacing.lg,
 	},
 	createTitle: {
-		fontSize: 14,
-		fontWeight: "600",
-		color: "#333",
-		marginBottom: 10,
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.semibold,
+		color: colors.textSecondary,
+		marginBottom: spacing.md,
 	},
 	createOption: {
-		backgroundColor: "#f8f8f8",
-		padding: 12,
-		borderRadius: 8,
-		marginBottom: 8,
-		borderWidth: 1,
-		borderColor: "#e0e0e0",
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.md,
+		backgroundColor: colors.cardMuted,
+		borderRadius: radius.md,
+		padding: spacing.md,
+		marginBottom: spacing.sm,
+		borderWidth: StyleSheet.hairlineWidth,
+		borderColor: colors.border,
 	},
 	disabledOption: {
 		opacity: 0.5,
 	},
+	createIcon: {
+		width: 38,
+		height: 38,
+		borderRadius: radius.sm,
+		backgroundColor: colors.primarySoft,
+		alignItems: "center",
+		justifyContent: "center",
+	},
 	createOptionTitle: {
-		fontSize: 14,
-		fontWeight: "600",
-		color: "#333",
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.semibold,
+		color: colors.text,
 	},
 	createOptionDesc: {
-		fontSize: 11,
-		color: "#666",
+		fontSize: fontSize.xs,
+		color: colors.textSecondary,
 		marginTop: 2,
+	},
+	prfStatus: {
+		fontSize: fontSize.xs,
+		color: colors.textTertiary,
+		fontStyle: "italic",
+		marginTop: spacing.xs,
+	},
+	recoveryBadge: {
+		paddingVertical: 2,
+		paddingHorizontal: spacing.sm,
+		borderRadius: radius.pill,
+	},
+	recoveryText: {
+		fontSize: 10,
+		fontWeight: fontWeight.semibold,
+		textTransform: "capitalize",
 	},
 	modalOverlay: {
 		flex: 1,
-		backgroundColor: "rgba(0,0,0,0.5)",
+		backgroundColor: colors.overlay,
 		justifyContent: "center",
 		alignItems: "center",
+		padding: spacing.xl,
 	},
 	modalContent: {
-		backgroundColor: "#fff",
-		borderRadius: 12,
-		padding: 20,
-		width: "85%",
-		maxWidth: 340,
+		backgroundColor: colors.card,
+		borderRadius: radius.xl,
+		padding: spacing.xxl,
+		width: "100%",
+		maxWidth: 360,
+	},
+	modalIcon: {
+		width: 48,
+		height: 48,
+		borderRadius: radius.md,
+		backgroundColor: colors.primarySoft,
+		alignItems: "center",
+		justifyContent: "center",
+		marginBottom: spacing.lg,
 	},
 	modalTitle: {
-		fontSize: 18,
-		fontWeight: "bold",
-		color: "#333",
-		marginBottom: 4,
+		fontSize: fontSize.xl,
+		fontWeight: fontWeight.bold,
+		color: colors.text,
+		marginBottom: spacing.xs,
 	},
 	modalSubtitle: {
-		fontSize: 13,
-		color: "#666",
-		marginBottom: 16,
+		fontSize: fontSize.sm,
+		color: colors.textSecondary,
+		marginBottom: spacing.xl,
 	},
 	passwordInput: {
 		borderWidth: 1,
-		borderColor: "#ddd",
-		borderRadius: 8,
-		padding: 12,
-		fontSize: 16,
-		marginBottom: 16,
-		color: "#333",
-		backgroundColor: "#f8f8f8",
+		borderColor: colors.border,
+		borderRadius: radius.md,
+		padding: spacing.lg,
+		fontSize: fontSize.md,
+		color: colors.text,
+		backgroundColor: colors.inputBg,
+		marginBottom: spacing.xl,
 	},
 	modalButtons: {
 		flexDirection: "row",
-		justifyContent: "flex-end",
-		gap: 10,
-	},
-	modalCancelButton: {
-		paddingVertical: 10,
-		paddingHorizontal: 16,
-	},
-	modalCancelText: {
-		color: "#666",
-		fontSize: 14,
-		fontWeight: "600",
-	},
-	modalConfirmButton: {
-		backgroundColor: "#007AFF",
-		paddingVertical: 10,
-		paddingHorizontal: 20,
-		borderRadius: 6,
-	},
-	modalConfirmText: {
-		color: "#fff",
-		fontSize: 14,
-		fontWeight: "600",
-	},
-	disabledButton: {
-		opacity: 0.6,
-	},
-	disabledText: {
-		opacity: 0.5,
+		gap: spacing.md,
 	},
 });
