@@ -123,6 +123,22 @@ pnpm lint             # Run linting
 
 **Without Passkeys (Expo Go compatible):** Remove `react-native-passkeys` from dependencies to use Expo Go. OAuth, Email OTP, and Guest auth will still work.
 
+## Local Dev: Config Changes & When to Rebuild
+
+This is an Expo **development build**. The #1 time-sink is applying a config change with the wrong reload:
+
+- **`app.json` → `extra.*`** (`openfortPublishableKey`, `openfortShieldPublishableKey`, `openfortPolicyId`, `passkeyRpId`) are **embedded into the native binary at build time** (the `Generate app.config for prebuilt Constants.manifest` phase) and read via `Constants.expoConfig.extra`. Changing them needs a **native rebuild** — `npx expo run:ios` (add `--no-bundler` to reuse a running Metro). A reload, Metro restart, or fast-refresh will NOT pick them up. `prebuild --clean` is only needed when native identity/plugins change.
+- **`.env`** (`SHIELD_*`) is server-side (the `app/api/*+api.ts` routes) → picked up by a **Metro restart** (`expo start --clear`). There are no `EXPO_PUBLIC_*` vars; the client gets keys from `app.json extra`.
+- **`metro.config.js`** → full Metro restart (not hot-reloaded).
+- **Native identity** (`scheme`, `bundleIdentifier`, `package`, `associatedDomains`, plugins, icon) → `expo prebuild --clean && expo run:ios`.
+- **JS/TS** → fast-refresh; for provider/`Constants` changes do a **full reload** (`r`) — fast-refresh does not re-mount `OpenfortProvider` or re-read `Constants`.
+
+**Switching Openfort projects:** update `app.json extra` + `.env`, **rebuild**, then **sign out & log in fresh** (the persisted session belongs to the old project; transaction intents only log under the embedded publishable key's project).
+
+**Traps:** `ios/.xcode.env.local` gets a version-pinned Homebrew Cellar node path on prebuild that breaks after `brew upgrade` — repoint to `/opt/homebrew/opt/node@NN/bin/node`. The `osascript … (-1743)` error at the end of `run:ios` is cosmetic (install already succeeded).
+
+Full reference: `docs/LOCAL_DEV_GOTCHAS.md`.
+
 ## Architecture Notes
 
 - **Provider Pattern**: `OpenfortProvider` wraps the entire app at `app/_layout.tsx`

@@ -7,7 +7,7 @@ import {
 	Text,
 	type ViewStyle,
 } from "react-native";
-import { colors, fontSize, fontWeight, radius, shadow, spacing } from "@/constants/theme";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/constants/theme";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 type Size = "md" | "sm";
@@ -57,7 +57,6 @@ export function Button({
 		...(size === "sm" ? styles.sizeSm : styles.sizeMd),
 		backgroundColor: surfaceByVariant[variant],
 		...(variant === "ghost" ? styles.ghostBorder : null),
-		...(variant === "primary" && isInteractive ? shadow.button : null),
 		...(fullWidth ? styles.fullWidth : null),
 		opacity: !isInteractive ? 0.5 : pressed ? 0.85 : 1,
 		transform: [{ scale: pressed && isInteractive ? 0.985 : 1 }],

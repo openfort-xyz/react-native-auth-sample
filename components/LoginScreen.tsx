@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { SocialButton } from "@/components/ui/SocialButton";
+import { SUPPORTED_CHAINS } from "@/constants/chains";
 import { colors, fontFamily, fontSize, fontWeight, radius, spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -36,6 +37,16 @@ export default function LoginScreen() {
 		Application.applicationId === "host.exp.Exponent" ? "exp" : Constants.expoConfig?.scheme;
 	const passkeyStatus =
 		isSupported === null ? "Checking…" : isSupported ? "Supported" : "Not supported";
+
+	const extra = Constants.expoConfig?.extra ?? {};
+	const publishableKey = String(extra.openfortPublishableKey ?? "");
+	const projectName = String(extra.openfortProjectName || "Unnamed project");
+	const hasPolicy = Boolean(extra.openfortPolicyId);
+	const env = publishableKey.startsWith("pk_live")
+		? "live"
+		: publishableKey.startsWith("pk_test")
+			? "test"
+			: "—";
 
 	return (
 		<Screen scroll contentStyle={styles.content}>
@@ -104,6 +115,44 @@ export default function LoginScreen() {
 				<DevRow label="RP ID" value={String(rpId)} />
 				<DevRow label="RP Name" value={String(rpName)} />
 				<DevRow label="Scheme" value={`${scheme ?? "—"} · ${Application.applicationId}`} />
+			</View>
+
+			<View style={styles.devCard}>
+				<View style={styles.devHeader}>
+					<Ionicons name="cube-outline" size={13} color={colors.textTertiary} />
+					<Text style={styles.devTitle}>Project config</Text>
+					<View
+						style={[
+							styles.statusDot,
+							{ backgroundColor: env === "live" ? colors.warning : colors.success },
+						]}
+					/>
+					<Text style={styles.devStatus}>{env}</Text>
+				</View>
+				<DevRow label="Project" value={projectName} />
+				<View style={styles.devRow}>
+					<Text style={styles.devLabel}>Paymaster</Text>
+					<View style={styles.statusInline}>
+						<View
+							style={[
+								styles.statusDot,
+								{ backgroundColor: hasPolicy ? colors.success : colors.danger },
+							]}
+						/>
+						<Text style={styles.devStatus}>{hasPolicy ? "Activated" : "Not activated"}</Text>
+					</View>
+				</View>
+				<View style={styles.devRow}>
+					<Text style={styles.devLabel}>Chains</Text>
+					<View style={styles.chainRow}>
+						{SUPPORTED_CHAINS.map((chain) => (
+							<View key={chain.id} style={styles.chainBadge}>
+								<View style={[styles.chainDot, { backgroundColor: chain.color }]} />
+								<Text style={styles.chainName}>{chain.shortName}</Text>
+							</View>
+						))}
+					</View>
+				</View>
 			</View>
 		</Screen>
 	);
@@ -216,7 +265,43 @@ const styles = StyleSheet.create({
 	devRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		alignItems: "center",
 		gap: spacing.md,
+	},
+	statusInline: {
+		flex: 1,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "flex-end",
+		gap: spacing.xs,
+	},
+	chainRow: {
+		flex: 1,
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "flex-end",
+		gap: spacing.xs,
+	},
+	chainBadge: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 4,
+		backgroundColor: colors.background,
+		borderRadius: 999,
+		borderWidth: StyleSheet.hairlineWidth,
+		borderColor: colors.border,
+		paddingVertical: 2,
+		paddingHorizontal: spacing.xs,
+	},
+	chainDot: {
+		width: 7,
+		height: 7,
+		borderRadius: 4,
+	},
+	chainName: {
+		fontSize: fontSize.xs,
+		color: colors.textSecondary,
+		fontWeight: fontWeight.medium,
 	},
 	devLabel: {
 		fontSize: fontSize.xs,

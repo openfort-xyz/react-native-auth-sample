@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+	AccountTypeEnum,
 	type ConnectedEmbeddedEthereumWallet,
 	type OAuthProvider,
 	useEmbeddedEthereumWallet,
@@ -10,6 +11,7 @@ import {
 	useUser,
 } from "@openfort/react-native";
 import * as Clipboard from "expo-clipboard";
+import Constants from "expo-constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -55,7 +57,21 @@ export const UserScreen = () => {
 	const [recoverWalletAddress, setRecoverWalletAddress] = useState<string | null>(null);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 	const [copiedKey, setCopiedKey] = useState<string | null>(null);
+	const [busyAction, setBusyAction] = useState<string | null>(null);
+	const runAction = useCallback(async (key: string, fn: () => Promise<void> | void) => {
+		setBusyAction(key);
+		try {
+			await fn();
+		} finally {
+			setBusyAction(null);
+		}
+	}, []);
 	const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const [createAccountType, setCreateAccountType] = useState<AccountTypeEnum>(AccountTypeEnum.SMART_ACCOUNT);
+	const [createStep, setCreateStep] = useState<"type" | "recovery">("type");
+	const [paymasterActive, setPaymasterActive] = useState(false);
+	// Paymaster policy from env (app.json extra). Empty string → undefined → toggle disabled.
+	const policyId = (Constants.expoConfig?.extra?.openfortPolicyId as string | undefined) || undefined;
 
 	const { signOut } = useSignOut();
 	const { user } = useUser();
@@ -179,23 +195,69 @@ export const UserScreen = () => {
 		[],
 	);
 
+	const mintNft = useCallback(async () => {
+		try {
+			if (!ethActiveWallet) {
+				Alert.alert("Error", "No active wallet selected");
+				return;
+			}
+			const provider = await ethActiveWallet.getProvider();
+			const from = ethActiveWallet.address;
+
+			// Apply the paymaster toggle at runtime. Only Smart Accounts consume
+			// sponsorship (EOA self-pays); updateFeeSponsorship lives on the underlying
+			// EvmProvider but isn't on the public provider type, hence the narrow cast.
+			const sponsorable = provider as unknown as { updateFeeSponsorship?: (id?: string) => void };
+			sponsorable.updateFeeSponsorship?.(paymasterActive && policyId ? policyId : undefined);
+
+			// Openfort demo ERC-721 with a public mint(address,uint256). Gasless when the
+			// project sponsors this contract via a policy; otherwise the node rejects and
+			// the error is surfaced cleanly (insufficient funds / reverted / …).
+			const NFT_CONTRACT = "0xbabe0001489722187FbaF0689C47B2f5E97545C5";
+			const MINT_SELECTOR = "0x40c10f19"; // mint(address,uint256)
+			const data =
+				MINT_SELECTOR +
+				from.slice(2).padStart(64, "0") + // to: this wallet
+				(1).toString(16).padStart(64, "0"); // amount: 1
+
+			const hash = await provider.request({
+				method: "eth_sendTransaction",
+				params: [{ from, to: NFT_CONTRACT, data }],
+			});
+			Alert.alert("NFT minted", `Tx hash:\n${String(hash)}`);
+		} catch (error) {
+			Alert.alert("Mint failed", error instanceof Error ? error.message : String(error));
+		}
+	}, [ethActiveWallet, paymasterActive, policyId]);
+
+	// Route create() per tab so the chosen accountType only reaches the Ethereum
+	// create (Solana has no account-type concept).
+	const runCreate = (opts: {
+		recoveryMethod: "automatic" | "password" | "passkey";
+		recoveryPassword?: string;
+		onError: (error: Error) => void;
+		onSuccess: (result: { account?: { address?: string } }) => void;
+	}) => {
+		if (activeTab === "ethereum") {
+			ethCreate({ ...opts, accountType: createAccountType });
+		} else {
+			solCreate(opts);
+		}
+	};
+
 	const handleCreateWalletAutomatic = () => {
-		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
-		createFn({
+		runCreate({
 			recoveryMethod: "automatic",
 			onError: (error: Error) => Alert.alert("Error", error.message),
-			onSuccess: ({ account }: { account?: { address?: string } }) =>
-				Alert.alert("Success", `Wallet created: ${account?.address}`),
+			onSuccess: ({ account }) => Alert.alert("Success", `Wallet created: ${account?.address}`),
 		});
 	};
 
 	const handleCreateWalletWithPasskey = () => {
-		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
-		createFn({
+		runCreate({
 			recoveryMethod: "passkey",
 			onError: (error: Error) => Alert.alert("Error", error.message),
-			onSuccess: ({ account }: { account?: { address?: string } }) =>
-				Alert.alert("Success", `Wallet created: ${account?.address}`),
+			onSuccess: ({ account }) => Alert.alert("Success", `Wallet created: ${account?.address}`),
 		});
 	};
 
@@ -205,8 +267,7 @@ export const UserScreen = () => {
 			return;
 		}
 		setIsPasswordLoading(true);
-		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
-		createFn({
+		runCreate({
 			recoveryMethod: "password",
 			recoveryPassword: password,
 			onError: (error: Error) => {
@@ -214,7 +275,7 @@ export const UserScreen = () => {
 				setPassword("");
 				Alert.alert("Error", error.message);
 			},
-			onSuccess: ({ account }: { account?: { address?: string } }) => {
+			onSuccess: ({ account }) => {
 				setIsPasswordLoading(false);
 				setPasswordModalVisible(false);
 				setPassword("");
@@ -367,7 +428,13 @@ export const UserScreen = () => {
 					</View>
 				</Card>
 
-				<ChainSegments activeTab={activeTab} onChange={setActiveTab} />
+				<ChainSegments
+					activeTab={activeTab}
+					onChange={(tab) => {
+						setActiveTab(tab);
+						setCreateStep("type");
+					}}
+				/>
 
 				{activeWallet?.address ? (
 					<Card title={`Active ${chainLabel} wallet`} right={<ChainBadge label={chainLabel} color={accent} />}>
@@ -387,23 +454,68 @@ export const UserScreen = () => {
 								icon="create-outline"
 								variant="secondary"
 								size="sm"
-								onPress={activeTab === "ethereum" ? signMessage : signSolanaMessage}
+								loading={busyAction === "sign"}
+								disabled={!!busyAction}
+								onPress={() =>
+									runAction("sign", activeTab === "ethereum" ? signMessage : signSolanaMessage)
+								}
 							/>
-							<Button title="Export key" icon="key-outline" variant="secondary" size="sm" onPress={exportKey} />
+							<Button
+								title="Export key"
+								icon="key-outline"
+								variant="secondary"
+								size="sm"
+								loading={busyAction === "export"}
+								disabled={!!busyAction}
+								onPress={() => runAction("export", exportKey)}
+							/>
+							{activeTab === "ethereum" ? (
+								<Button
+									title="Mint"
+									icon="sparkles-outline"
+									variant="secondary"
+									size="sm"
+									loading={busyAction === "mint"}
+									disabled={!!busyAction}
+									onPress={() => runAction("mint", mintNft)}
+								/>
+							) : null}
+							{activeTab === "ethereum" ? (
+								<Button
+									title={paymasterActive ? "Paymaster on" : "Paymaster off"}
+									icon="flash-outline"
+									variant={paymasterActive ? "secondary" : "ghost"}
+									size="sm"
+									disabled={!policyId || !!busyAction}
+									onPress={() => setPaymasterActive((v) => !v)}
+								/>
+							) : null}
 							{activeTab === "ethereum" && ethActiveWallet ? (
 								<Button
 									title={chainId === "11155111" ? "→ Base" : "→ Sepolia"}
 									icon="swap-horizontal"
 									variant="ghost"
 									size="sm"
-									onPress={() => {
-										const newChain = chainId === "11155111" ? "84532" : "11155111";
-										switchChain(ethActiveWallet, newChain);
-										setChainId(newChain);
-									}}
+									loading={busyAction === "switch"}
+									disabled={!!busyAction}
+									onPress={() =>
+										runAction("switch", async () => {
+											const newChain = chainId === "11155111" ? "84532" : "11155111";
+											await switchChain(ethActiveWallet, newChain);
+											setChainId(newChain);
+										})
+									}
 								/>
 							) : null}
 						</View>
+						{activeTab === "ethereum" ? (
+							<View style={{ flexDirection: "row", alignItems: "flex-start", gap: spacing.xs, marginTop: spacing.md }}>
+								<Ionicons name="information-circle-outline" size={13} color={colors.textTertiary} style={{ marginTop: 1 }} />
+								<Text style={{ flex: 1, fontSize: fontSize.xs, color: colors.textTertiary, lineHeight: 16 }}>
+									Paymaster on/off applies a transaction-based policy. Project-level sponsorship covers gas on every tx regardless of this toggle.
+								</Text>
+							</View>
+						) : null}
 					</Card>
 				) : null}
 
@@ -429,30 +541,72 @@ export const UserScreen = () => {
 
 					<View style={styles.divider} />
 					<Text style={styles.createTitle}>Create new wallet</Text>
-					<CreateOption
-						icon="flash-outline"
-						title="Automatic"
-						desc="No user input required"
-						disabled={isCreating}
-						onPress={handleCreateWalletAutomatic}
-					/>
-					<CreateOption
-						icon="lock-closed-outline"
-						title="Password"
-						desc="Recover with your password"
-						disabled={isCreating}
-						onPress={() => openPasswordModal("create")}
-					/>
-					{isSupported ? (
-						<CreateOption
-							icon="finger-print"
-							title="Passkey"
-							desc="Recover with biometrics"
-							disabled={isCreating}
-							onPress={handleCreateWalletWithPasskey}
-						/>
+					{activeTab === "ethereum" && createStep === "type" ? (
+						<>
+							<Text style={styles.label}>Account type</Text>
+							<SelectOption
+								icon="cube-outline"
+								title="Smart Account"
+								desc="Gas can be sponsored via a paymaster policy"
+								selected={createAccountType === AccountTypeEnum.SMART_ACCOUNT}
+								onPress={() => {
+									setCreateAccountType(AccountTypeEnum.SMART_ACCOUNT);
+									setCreateStep("recovery");
+								}}
+							/>
+							<SelectOption
+								icon="person-outline"
+								title="EOA"
+								desc="Externally owned account — pays its own gas"
+								selected={createAccountType === AccountTypeEnum.EOA}
+								onPress={() => {
+									setCreateAccountType(AccountTypeEnum.EOA);
+									setCreateStep("recovery");
+								}}
+							/>
+						</>
 					) : (
-						<Text style={styles.prfStatus}>Passkeys not available on this device</Text>
+						<>
+							{activeTab === "ethereum" ? (
+								<Pressable
+									accessibilityRole="button"
+									accessibilityLabel="Back to account type"
+									onPress={() => setCreateStep("type")}
+									style={({ pressed }) => [styles.backRow, pressed && styles.pressed]}
+								>
+									<Ionicons name="chevron-back" size={18} color={colors.primary} />
+									<Text style={styles.backText}>
+										{createAccountType === AccountTypeEnum.SMART_ACCOUNT ? "Smart Account" : "EOA"}
+									</Text>
+								</Pressable>
+							) : null}
+							<Text style={styles.label}>Recovery method</Text>
+							<CreateOption
+								icon="flash-outline"
+								title="Automatic"
+								desc="No user input required"
+								disabled={isCreating}
+								onPress={handleCreateWalletAutomatic}
+							/>
+							<CreateOption
+								icon="lock-closed-outline"
+								title="Password"
+								desc="Recover with your password"
+								disabled={isCreating}
+								onPress={() => openPasswordModal("create")}
+							/>
+							{isSupported ? (
+								<CreateOption
+									icon="finger-print"
+									title="Passkey"
+									desc="Recover with biometrics"
+									disabled={isCreating}
+									onPress={handleCreateWalletWithPasskey}
+								/>
+							) : (
+								<Text style={styles.prfStatus}>Passkeys not available on this device</Text>
+							)}
+						</>
 					)}
 				</Card>
 			</View>
@@ -620,6 +774,46 @@ function CreateOption({
 				<Text style={styles.createOptionDesc}>{desc}</Text>
 			</View>
 			<Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+		</Pressable>
+	);
+}
+
+function SelectOption({
+	icon,
+	title,
+	desc,
+	selected,
+	onPress,
+}: {
+	icon: keyof typeof Ionicons.glyphMap;
+	title: string;
+	desc: string;
+	selected: boolean;
+	onPress: () => void;
+}) {
+	return (
+		<Pressable
+			accessibilityRole="radio"
+			accessibilityState={{ selected }}
+			onPress={onPress}
+			style={({ pressed }) => [
+				styles.createOption,
+				selected && styles.selectedOption,
+				pressed && styles.pressed,
+			]}
+		>
+			<View style={styles.createIcon}>
+				<Ionicons name={icon} size={18} color={colors.primary} />
+			</View>
+			<View style={styles.flex}>
+				<Text style={styles.createOptionTitle}>{title}</Text>
+				<Text style={styles.createOptionDesc}>{desc}</Text>
+			</View>
+			<Ionicons
+				name={selected ? "radio-button-on" : "radio-button-off"}
+				size={18}
+				color={selected ? colors.primary : colors.textTertiary}
+			/>
 		</Pressable>
 	);
 }
@@ -844,6 +1038,21 @@ const styles = StyleSheet.create({
 	},
 	disabledOption: {
 		opacity: 0.5,
+	},
+	selectedOption: {
+		borderColor: colors.primary,
+		backgroundColor: colors.primarySoft,
+	},
+	backRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.xs,
+		marginBottom: spacing.md,
+	},
+	backText: {
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.semibold,
+		color: colors.primary,
 	},
 	createIcon: {
 		width: 38,

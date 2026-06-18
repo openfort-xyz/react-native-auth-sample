@@ -92,6 +92,9 @@ pnpm prebuild:clean              # Regenerate native directories
 
 **Without Passkeys (Expo Go compatible):** If you don't need passkey authentication, you can remove `react-native-passkeys` from dependencies and use Expo Go with just `pnpm start`. OAuth, Email OTP, and Guest authentication will still work.
 
+> [!IMPORTANT]
+> **Changing keys in `app.json` (`extra.*`) requires a native rebuild, not a reload.** Those values (`openfortPublishableKey`, `openfortShieldPublishableKey`, `openfortPolicyId`, …) are embedded into the native binary at build time, so `npx expo run:ios` is required — a Metro restart or fast-refresh will not pick them up. `.env` changes (server-side Shield keys) are picked up by `npx expo start --clear`. See [`docs/LOCAL_DEV_GOTCHAS.md`](docs/LOCAL_DEV_GOTCHAS.md) for the full "what change → what to run" table and toolchain traps.
+
 ## Passkeys Setup
 
 Passkeys require HTTPS. For local development, use [ngrok](https://ngrok.com/) to create a tunnel:

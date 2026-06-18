@@ -12,9 +12,9 @@ export const colors = {
 	cardMuted: "#F7F8FC",
 
 	// Brand
-	primary: "#5A4FF3",
-	primaryDark: "#4035C9",
-	primarySoft: "#ECEAFE",
+	primary: "#FC3627",
+	primaryDark: "#D92A1C",
+	primarySoft: "#FFE7E3",
 
 	// Text
 	text: "#0F172A",
