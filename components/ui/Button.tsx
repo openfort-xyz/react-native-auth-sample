@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/constants/theme";
 
-type Variant = "primary" | "secondary" | "danger" | "ghost";
+type Variant = "primary" | "secondary" | "danger" | "ghost" | "info";
 type Size = "md" | "sm";
 
 type ButtonProps = {
@@ -29,6 +29,7 @@ const surfaceByVariant: Record<Variant, string> = {
 	secondary: colors.primarySoft,
 	danger: colors.dangerSoft,
 	ghost: "transparent",
+	info: colors.info,
 };
 
 const labelByVariant: Record<Variant, string> = {
@@ -36,6 +37,7 @@ const labelByVariant: Record<Variant, string> = {
 	secondary: colors.primary,
 	danger: colors.danger,
 	ghost: colors.textSecondary,
+	info: colors.textInverse,
 };
 
 export function Button({

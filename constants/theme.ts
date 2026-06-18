@@ -32,6 +32,7 @@ export const colors = {
 	danger: "#EF4444",
 	dangerSoft: "#FDE6E6",
 	warning: "#F59E0B",
+	info: "#2563EB",
 
 	// Chain accents
 	ethereum: "#627EEA",

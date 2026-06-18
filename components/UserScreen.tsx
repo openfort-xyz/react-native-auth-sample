@@ -436,6 +436,12 @@ export const UserScreen = () => {
 					}}
 				/>
 
+				{activeTab === "ethereum" ? (
+					<Text style={{ textAlign: "center", fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.sm }}>
+						{isSwitchingChain ? "Switching network…" : `${chainId === "11155111" ? "Ethereum Sepolia" : "Base Sepolia"} · ${chainId}`}
+					</Text>
+				) : null}
+
 				{activeWallet?.address ? (
 					<Card title={`Active ${chainLabel} wallet`} right={<ChainBadge label={chainLabel} color={accent} />}>
 						<CopyRow
@@ -443,11 +449,6 @@ export const UserScreen = () => {
 							copied={copiedKey === "active"}
 							onCopy={() => handleCopy(activeWallet.address, "active")}
 						/>
-						{activeTab === "ethereum" ? (
-							<Text style={styles.chainText}>
-								Chain ID · {isSwitchingChain ? "switching…" : chainId}
-							</Text>
-						) : null}
 						<View style={styles.actionRow}>
 							<Button
 								title="Sign"
@@ -484,7 +485,7 @@ export const UserScreen = () => {
 								<Button
 									title={paymasterActive ? "Paymaster on" : "Paymaster off"}
 									icon="flash-outline"
-									variant={paymasterActive ? "secondary" : "ghost"}
+									variant={paymasterActive ? "info" : "ghost"}
 									size="sm"
 									disabled={!policyId || !!busyAction}
 									onPress={() => setPaymasterActive((v) => !v)}
