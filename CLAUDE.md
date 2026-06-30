@@ -75,9 +75,9 @@ Create a `.env` file based on `.env.example`:
 
 ```
 # Openfort Shield (required for wallet encryption)
-SHIELD_API_KEY=
+SHIELD_PUBLISHABLE_KEY=
 SHIELD_SECRET_KEY=
-SHIELD_ENCRYPTION_SHARE=
+SHIELD_ENCRYPTION_KEY=
 
 # Android passkey verification
 ANDROID_PACKAGE_NAME=com.openfort.exposample
