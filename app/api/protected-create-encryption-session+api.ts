@@ -1,7 +1,7 @@
 export async function POST() {
-	const shieldApiKey = process.env.SHIELD_API_KEY;
+	const shieldApiKey = process.env.SHIELD_PUBLISHABLE_KEY;
 	const shieldSecretKey = process.env.SHIELD_SECRET_KEY;
-	const shieldEncryptionShare = process.env.SHIELD_ENCRYPTION_SHARE;
+	const shieldEncryptionShare = process.env.SHIELD_ENCRYPTION_KEY;
 
 	if (!shieldApiKey || !shieldSecretKey || !shieldEncryptionShare) {
 		console.error("Missing required Shield environment variables");

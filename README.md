@@ -38,8 +38,8 @@ Edit `.env` with your values:
 
 ```sh
 # Get from https://dashboard.openfort.io
-SHIELD_API_KEY=your-shield-api-key
-SHIELD_ENCRYPTION_SHARE=your-encryption-share
+SHIELD_PUBLISHABLE_KEY=your-shield-api-key
+SHIELD_ENCRYPTION_KEY=your-encryption-share
 SHIELD_SECRET_KEY=your-shield-secret-key
 
 # Android passkeys (see Passkeys section below)
