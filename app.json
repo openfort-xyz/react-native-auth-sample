@@ -31,6 +31,8 @@
       "_comment": "Get your keys from https://dashboard.openfort.io/api-keys",
       "openfortPublishableKey": "<your-openfort-publishable-key>",
       "openfortShieldPublishableKey": "<your-shield-publishable-key>",
+      "_feeSponsorshipId_comment": "Base Sepolia gas sponsorship (pol_...) from https://dashboard.openfort.io/policies — sponsors the 7702 authorization send",
+      "feeSponsorshipId": "<your-base-sepolia-gas-sponsorship-id>",
       "_passkeyRpId_comment": "Must match associatedDomains domain (without webcredentials: prefix)",
       "passkeyRpId": "<your-domain>",
       "passkeyRpName": "Openfort Wallet",

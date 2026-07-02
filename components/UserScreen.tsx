@@ -189,6 +189,41 @@ export const UserScreen = () => {
 		});
 	};
 
+	// One-click authorization: the first sponsored send from a Delegated Account makes
+	// openfort-js sign and attach the one-time EIP-7702 authorization to Openfort's
+	// Calibur implementation. Later sends on the same chain skip it automatically.
+	const handleAuthorize7702 = useCallback(async () => {
+		try {
+			if (!ethActiveWallet) {
+				Alert.alert("Error", "No active Ethereum wallet selected");
+				return;
+			}
+			const provider = await ethActiveWallet.getProvider();
+			const result = await provider.request({
+				method: "wallet_sendCalls",
+				params: [
+					{
+						version: "1.0",
+						chainId: "0x14a34", // Base Sepolia (84532)
+						from: ethActiveWallet.address,
+						calls: [
+							{
+								to: "0x0000000000000000000000000000000000000000",
+								value: "0x0",
+								data: "0x",
+							},
+						],
+					},
+				],
+			});
+			console.log("[7702] wallet_sendCalls result:", result);
+			Alert.alert("✅ 7702 authorized", `Delegation submitted.\n\n${JSON.stringify(result).slice(0, 100)}…`);
+		} catch (error) {
+			console.error("[UserScreen] 7702 authorize error:", error);
+			Alert.alert("Error", error instanceof Error ? error.message : String(error));
+		}
+	}, [ethActiveWallet]);
+
 	const handleCreateWalletWithPasskey = () => {
 		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
 		createFn({
@@ -390,6 +425,15 @@ export const UserScreen = () => {
 								onPress={activeTab === "ethereum" ? signMessage : signSolanaMessage}
 							/>
 							<Button title="Export key" icon="key-outline" variant="secondary" size="sm" onPress={exportKey} />
+							{activeTab === "ethereum" && ethActiveWallet ? (
+								<Button
+									title="Authorize 7702"
+									icon="shield-checkmark-outline"
+									variant="secondary"
+									size="sm"
+									onPress={handleAuthorize7702}
+								/>
+							) : null}
 							{activeTab === "ethereum" && ethActiveWallet ? (
 								<Button
 									title={chainId === "11155111" ? "→ Base" : "→ Sepolia"}
