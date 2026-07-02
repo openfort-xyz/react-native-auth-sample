@@ -24,7 +24,7 @@ export default function RootLayout() {
 				publishableKey={Constants.expoConfig?.extra?.openfortPublishableKey}
 				walletConfig={{
 					debug: true, // Enable debug for development
-					accountType: AccountTypeEnum.EOA,
+					accountType: AccountTypeEnum.DELEGATED_ACCOUNT,
 					feeSponsorshipId: feeSponsorshipId ? { 84532: feeSponsorshipId } : undefined,
 					shieldPublishableKey:
 						Constants.expoConfig?.extra?.openfortShieldPublishableKey,
