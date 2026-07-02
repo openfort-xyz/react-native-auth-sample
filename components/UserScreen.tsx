@@ -55,6 +55,7 @@ export const UserScreen = () => {
 	const [password, setPassword] = useState("");
 	const [recoverWalletAddress, setRecoverWalletAddress] = useState<string | null>(null);
 	const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+	const [createDelegated, setCreateDelegated] = useState(false);
 	const [copiedKey, setCopiedKey] = useState<string | null>(null);
 	const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -190,20 +191,11 @@ export const UserScreen = () => {
 		});
 	};
 
-	// Create a Delegated Account (EIP-7702). The account keeps the EOA address and
-	// gains smart-account features; the authorization is attached on the first send.
+	// Create a Delegated Account (EIP-7702) with password recovery. The account keeps
+	// the EOA address; the authorization is attached to Calibur on the first send.
 	const handleCreateDelegated = () => {
-		ethCreate({
-			recoveryMethod: "automatic",
-			accountType: AccountTypeEnum.DELEGATED_ACCOUNT,
-			chainId: 84532,
-			onError: (error: Error) => Alert.alert("Error", error.message),
-			onSuccess: ({ account }: { account?: { address?: string } }) =>
-				Alert.alert(
-					"Delegated wallet created",
-					`${account?.address}\n\nTap "Authorize 7702" to deploy the delegation.`,
-				),
-		});
+		openPasswordModal("create");
+		setCreateDelegated(true);
 	};
 
 	// One-click authorization: the first sponsored send from a Delegated Account makes
@@ -257,22 +249,33 @@ export const UserScreen = () => {
 			return;
 		}
 		setIsPasswordLoading(true);
+		const onError = (error: Error) => {
+			setIsPasswordLoading(false);
+			setPassword("");
+			setCreateDelegated(false);
+			Alert.alert("Error", error.message);
+		};
+		const onSuccess = ({ account }: { account?: { address?: string } }) => {
+			setIsPasswordLoading(false);
+			setPasswordModalVisible(false);
+			setPassword("");
+			setCreateDelegated(false);
+			Alert.alert("Success", `Wallet created: ${account?.address}`);
+		};
+		if (activeTab === "ethereum" && createDelegated) {
+			// Delegated Account (EIP-7702) — Openfort delegates to Calibur on the first send.
+			ethCreate({
+				recoveryMethod: "password",
+				recoveryPassword: password,
+				accountType: AccountTypeEnum.DELEGATED_ACCOUNT,
+				chainId: 84532,
+				onError,
+				onSuccess,
+			});
+			return;
+		}
 		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
-		createFn({
-			recoveryMethod: "password",
-			recoveryPassword: password,
-			onError: (error: Error) => {
-				setIsPasswordLoading(false);
-				setPassword("");
-				Alert.alert("Error", error.message);
-			},
-			onSuccess: ({ account }: { account?: { address?: string } }) => {
-				setIsPasswordLoading(false);
-				setPasswordModalVisible(false);
-				setPassword("");
-				Alert.alert("Success", `Wallet created: ${account?.address}`);
-			},
-		});
+		createFn({ recoveryMethod: "password", recoveryPassword: password, onError, onSuccess });
 	};
 
 	const handleRecoverWalletWithPassword = () => {
@@ -321,6 +324,7 @@ export const UserScreen = () => {
 	const openPasswordModal = (mode: "create" | "recover", walletAddress?: string) => {
 		setPasswordModalMode(mode);
 		setPassword("");
+		setCreateDelegated(false);
 		setRecoverWalletAddress(mode === "recover" && walletAddress ? walletAddress : null);
 		setPasswordModalVisible(true);
 	};
@@ -537,6 +541,7 @@ export const UserScreen = () => {
 					setPasswordModalVisible(false);
 					setPassword("");
 					setRecoverWalletAddress(null);
+					setCreateDelegated(false);
 				}}
 				onConfirm={
 					passwordModalMode === "create" ? handleCreateWalletWithPassword : handleRecoverWalletWithPassword
