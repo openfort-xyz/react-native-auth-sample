@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+	AccountTypeEnum,
 	type ConnectedEmbeddedEthereumWallet,
 	type OAuthProvider,
 	useEmbeddedEthereumWallet,
@@ -188,6 +189,57 @@ export const UserScreen = () => {
 				Alert.alert("Success", `Wallet created: ${account?.address}`),
 		});
 	};
+
+	// Create a Delegated Account (EIP-7702). The account keeps the EOA address and
+	// gains smart-account features; the authorization is attached on the first send.
+	const handleCreateDelegated = () => {
+		ethCreate({
+			recoveryMethod: "automatic",
+			accountType: AccountTypeEnum.DELEGATED_ACCOUNT,
+			chainId: 84532,
+			onError: (error: Error) => Alert.alert("Error", error.message),
+			onSuccess: ({ account }: { account?: { address?: string } }) =>
+				Alert.alert(
+					"Delegated wallet created",
+					`${account?.address}\n\nTap "Authorize 7702" to deploy the delegation.`,
+				),
+		});
+	};
+
+	// One-click authorization: the first sponsored send from a Delegated Account makes
+	// openfort-js sign and attach the one-time EIP-7702 authorization to Openfort's
+	// Calibur implementation. Later sends on the same chain skip it automatically.
+	const handleAuthorize7702 = useCallback(async () => {
+		try {
+			if (!ethActiveWallet) {
+				Alert.alert("Error", "No active Ethereum wallet selected");
+				return;
+			}
+			const provider = await ethActiveWallet.getProvider();
+			const result = await provider.request({
+				method: "wallet_sendCalls",
+				params: [
+					{
+						version: "1.0",
+						chainId: "0x14a34", // Base Sepolia (84532)
+						from: ethActiveWallet.address,
+						calls: [
+							{
+								to: "0x0000000000000000000000000000000000000000",
+								value: "0x0",
+								data: "0x",
+							},
+						],
+					},
+				],
+			});
+			console.log("[7702] wallet_sendCalls result:", result);
+			Alert.alert("✅ 7702 authorized", `Delegation submitted.\n\n${JSON.stringify(result).slice(0, 100)}…`);
+		} catch (error) {
+			console.error("[UserScreen] 7702 authorize error:", error);
+			Alert.alert("Error", error instanceof Error ? error.message : String(error));
+		}
+	}, [ethActiveWallet]);
 
 	const handleCreateWalletWithPasskey = () => {
 		const createFn = activeTab === "ethereum" ? ethCreate : solCreate;
@@ -392,6 +444,15 @@ export const UserScreen = () => {
 							<Button title="Export key" icon="key-outline" variant="secondary" size="sm" onPress={exportKey} />
 							{activeTab === "ethereum" && ethActiveWallet ? (
 								<Button
+									title="Authorize 7702"
+									icon="shield-checkmark-outline"
+									variant="secondary"
+									size="sm"
+									onPress={handleAuthorize7702}
+								/>
+							) : null}
+							{activeTab === "ethereum" && ethActiveWallet ? (
+								<Button
 									title={chainId === "11155111" ? "→ Base" : "→ Sepolia"}
 									icon="swap-horizontal"
 									variant="ghost"
@@ -436,6 +497,15 @@ export const UserScreen = () => {
 						disabled={isCreating}
 						onPress={handleCreateWalletAutomatic}
 					/>
+					{activeTab === "ethereum" ? (
+						<CreateOption
+							icon="shield-outline"
+							title="Delegated (7702)"
+							desc="Smart account via EIP-7702 (Calibur)"
+							disabled={isCreating}
+							onPress={handleCreateDelegated}
+						/>
+					) : null}
 					<CreateOption
 						icon="lock-closed-outline"
 						title="Password"

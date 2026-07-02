@@ -13,6 +13,10 @@ export default function RootLayout() {
 	const passkeyRpName = Constants.expoConfig?.extra?.passkeyRpName as
 		| string
 		| undefined;
+	// Base Sepolia gas sponsorship (pol_...) used to sponsor the 7702 authorization send.
+	const feeSponsorshipId = Constants.expoConfig?.extra?.feeSponsorshipId as
+		| string
+		| undefined;
 
 	return (
 		<SafeAreaProvider>
@@ -21,7 +25,7 @@ export default function RootLayout() {
 				walletConfig={{
 					debug: true, // Enable debug for development
 					accountType: AccountTypeEnum.EOA,
-					feeSponsorshipId: undefined,
+					feeSponsorshipId: feeSponsorshipId ? { 84532: feeSponsorshipId } : undefined,
 					shieldPublishableKey:
 						Constants.expoConfig?.extra?.openfortShieldPublishableKey,
 					passkeyRpId,
