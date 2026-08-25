@@ -7,4 +7,12 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    settings: {
+      // Keep eslint-config-expo's default (react-native ships Flow syntax the
+      // import plugin can't parse) and add @expo/vector-icons, whose "exports"
+      // map the plugin's node resolver can't read; TypeScript checks both.
+      'import/ignore': ['react-native', '@expo/vector-icons'],
+    },
+  },
 ]);

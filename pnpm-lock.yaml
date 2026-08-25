@@ -8,13 +8,21 @@ overrides:
   picomatch@<4.0.4: 4.0.4
   brace-expansion@<2: 2.0.1
 
+patchedDependencies:
+  '@stripe/stripe-react-native@0.52.0-crypto-onramp-2-private-beta.4':
+    hash: cfa5d00ec67f68c2d2639cef433bf57ba62cb77c83e35b300e5981e93ecb1b28
+    path: patches/@stripe__stripe-react-native@0.52.0-crypto-onramp-2-private-beta.4.patch
+
 importers:
 
   .:
     dependencies:
+      '@expo/vector-icons':
+        specifier: 15.1.1
+        version: 15.1.1(expo-font@55.0.4)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       '@openfort/react-native':
-        specifier: 1.1.5
-        version: 1.1.5(expo-apple-authentication@55.0.9(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo-application@55.0.10(expo@55.0.9))(expo-crypto@55.0.10(expo@55.0.9))(expo-linking@55.0.9)(expo-secure-store@55.0.9(expo@55.0.9))(expo-web-browser@55.0.10(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo@55.0.9)(react-native-webview@13.16.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+        specifier: ^2.1.1
+        version: 2.1.1(expo-apple-authentication@55.0.9(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo-application@55.0.10(expo@55.0.9))(expo-crypto@55.0.10(expo@55.0.9))(expo-linking@55.0.9)(expo-secure-store@55.0.9(expo@55.0.9))(expo-web-browser@55.0.10(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo@55.0.9)(react-native-webview@13.16.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@react-native-async-storage/async-storage':
         specifier: 2.2.0
         version: 2.2.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))
@@ -24,6 +32,9 @@ importers:
       '@react-navigation/native':
         specifier: ^7.1.6
         version: 7.2.2(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+      '@stripe/stripe-react-native':
+        specifier: 0.52.0-crypto-onramp-2-private-beta.4
+        version: 0.52.0-crypto-onramp-2-private-beta.4(patch_hash=cfa5d00ec67f68c2d2639cef433bf57ba62cb77c83e35b300e5981e93ecb1b28)(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       '@walletconnect/sign-client':
         specifier: 2.23.1
         version: 2.23.1(@react-native-async-storage/async-storage@2.2.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(typescript@5.9.3)(zod@3.25.76)
@@ -1061,11 +1072,16 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@openfort/openfort-js@1.5.0':
-    resolution: {integrity: sha512-RbRFWzGVagIgyYouNb24oACpSxhZ2jsQCc4EmrkFiczOXl5b3acGOoVQ1DFkrxySZqQiLI7UFCmJl7ovfqzv/Q==}
+  '@openfort/openfort-js@2.3.0':
+    resolution: {integrity: sha512-Ycjj97j/21m5jTDqPNHQ0cuMcPh24XBvQuk6r6VWyli0L4O7HSyOZtAu4fU+RCnHJ6l8dVQThy1c5dhUpxBqDw==}
+    peerDependencies:
+      typescript: '>=5.9.3'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
-  '@openfort/react-native@1.1.5':
-    resolution: {integrity: sha512-jxbTINHoqRjPuxHR/aUW0MQXadJXiGWx8v/wwnUv/HvTCnX8UQgnM4byc9THbMBpzh8RlvGNqposFPxv2F9PKw==}
+  '@openfort/react-native@2.1.1':
+    resolution: {integrity: sha512-JuwmS0y2FS/wyEvINh1JeOYjMzJJreZ0GodwV/bh0YoGoJ0h8wO3TN8WAEc9V4Yp2ViZ8jmHfWx6iDe+QwOptA==}
     peerDependencies:
       expo-apple-authentication: '*'
       expo-application: '*'
@@ -1077,8 +1093,8 @@ packages:
       react-native: '*'
       react-native-webview: '*'
 
-  '@openfort/shield-js@0.1.37':
-    resolution: {integrity: sha512-DiSTo0keqbAtkG4vG/07lrRoDjgonDSNmyEHNillByaBoDlna/kDBf5r1FWVYXskwXVUv7UA8YDtk9cgYdATUg==}
+  '@openfort/shield-js@0.1.36':
+    resolution: {integrity: sha512-0vB5HvIxFr7IAzEFc7xr7FtiLvx6Zt+ByI48R8tywLb0+xp7ZAo/psB4sVz4aRyo+d+q5wW/5ulGP3mxkQeJyA==}
 
   '@radix-ui/primitive@1.1.3':
     resolution: {integrity: sha512-JTF99U/6XIjCBo0wqkU5sK10glYe27MRRsfwoiq5zzOEZLHU3A3KCMa5X/azekYRCJ0HlwI0crAXS/5dEHTzDg==}
@@ -1487,6 +1503,16 @@ packages:
 
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
+
+  '@stripe/stripe-react-native@0.52.0-crypto-onramp-2-private-beta.4':
+    resolution: {integrity: sha512-eEczjxdvRnjguDX187ji6S7nRR2uiV34+3wki4DVOxnb4gzSCdj0NzBm/zYLD8q0tmjyGAFYZwfAQdWP1LqVhg==}
+    peerDependencies:
+      expo: '>=46.0.9'
+      react: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      expo:
+        optional: true
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -2824,15 +2850,6 @@ packages:
   flow-enums-runtime@0.0.6:
     resolution: {integrity: sha512-3PYnM29RFXwvAN6Pc/scUfkI7RwhQ/xqyLUyPNlXUp9S40zI8nup9tUSrTLSVnWGBN38FNiGWbwZOB6uR4OGdw==}
 
-  follow-redirects@1.15.11:
-    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-
   follow-redirects@1.16.0:
     resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
     engines: {node: '>=4.0'}
@@ -3024,10 +3041,6 @@ packages:
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
-
-  human-id@4.1.3:
-    resolution: {integrity: sha512-tsYlhAYpjCKa//8rXZ9DqKEawhPoSytweBC2eNvcaDK+57RZLHGqNs3PZTQO6yekLFSuvA6AlnAfrw1uBvtb+Q==}
-    hasBin: true
 
   hyphenate-style-name@1.1.0:
     resolution: {integrity: sha512-WDC/ui2VVRrz3jOVi+XtjqkDjiVjTtFaAGiW37k6b+ohyQ5wYDOGkvCZa8+H0nx3gyvv0+BST9xuOgIyGQ00gw==}
@@ -6178,7 +6191,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@openfort/openfort-js@1.5.0':
+  '@openfort/openfort-js@2.3.0(typescript@5.9.3)':
     dependencies:
       '@ethersproject/abi': 5.8.0
       '@ethersproject/bytes': 5.8.0
@@ -6186,22 +6199,23 @@ snapshots:
       '@ethersproject/keccak256': 5.8.0
       '@ethersproject/providers': 5.8.0
       '@ethersproject/transactions': 5.8.0
-      '@openfort/shield-js': 0.1.37
+      '@openfort/shield-js': 0.1.36
       '@sentry/browser': 9.47.1
       '@sentry/core': 9.47.1
       axios: 1.18.1
       axios-retry: 4.5.0(axios@1.18.1)
       eventemitter3: 5.0.1
-      human-id: 4.1.3
+    optionalDependencies:
+      typescript: 5.9.3
     transitivePeerDependencies:
       - bufferutil
       - debug
       - supports-color
       - utf-8-validate
 
-  '@openfort/react-native@1.1.5(expo-apple-authentication@55.0.9(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo-application@55.0.10(expo@55.0.9))(expo-crypto@55.0.10(expo@55.0.9))(expo-linking@55.0.9)(expo-secure-store@55.0.9(expo@55.0.9))(expo-web-browser@55.0.10(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo@55.0.9)(react-native-webview@13.16.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)':
+  '@openfort/react-native@2.1.1(expo-apple-authentication@55.0.9(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo-application@55.0.10(expo@55.0.9))(expo-crypto@55.0.10(expo@55.0.9))(expo-linking@55.0.9)(expo-secure-store@55.0.9(expo@55.0.9))(expo-web-browser@55.0.10(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo@55.0.9)(react-native-webview@13.16.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
     dependencies:
-      '@openfort/openfort-js': 1.5.0
+      '@openfort/openfort-js': 2.3.0(typescript@5.9.3)
       expo-apple-authentication: 55.0.9(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))
       expo-application: 55.0.10(expo@55.0.9)
       expo-crypto: 55.0.10(expo@55.0.9)
@@ -6217,9 +6231,10 @@ snapshots:
       - debug
       - expo
       - supports-color
+      - typescript
       - utf-8-validate
 
-  '@openfort/shield-js@0.1.37':
+  '@openfort/shield-js@0.1.36':
     dependencies:
       axios: 1.15.0
       axios-retry: 4.5.0(axios@1.15.0)
@@ -6705,6 +6720,13 @@ snapshots:
   '@sinonjs/fake-timers@10.3.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
+
+  '@stripe/stripe-react-native@0.52.0-crypto-onramp-2-private-beta.4(patch_hash=cfa5d00ec67f68c2d2639cef433bf57ba62cb77c83e35b300e5981e93ecb1b28)(expo@55.0.9)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      react: 19.2.0
+      react-native: 0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+    optionalDependencies:
+      expo: 55.0.9(@babel/core@7.29.0)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.7)(expo-router@55.0.8)(react-dom@19.2.0(react@19.2.0))(react-native-webview@13.16.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -7351,7 +7373,7 @@ snapshots:
 
   axios@1.15.0:
     dependencies:
-      follow-redirects: 1.15.11
+      follow-redirects: 1.16.0
       form-data: 4.0.5
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -8486,8 +8508,6 @@ snapshots:
 
   flow-enums-runtime@0.0.6: {}
 
-  follow-redirects@1.15.11: {}
-
   follow-redirects@1.16.0: {}
 
   fontfaceobserver@2.3.0: {}
@@ -8692,8 +8712,6 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
-
-  human-id@4.1.3: {}
 
   hyphenate-style-name@1.1.0: {}
 
