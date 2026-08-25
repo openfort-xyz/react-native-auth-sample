@@ -23,7 +23,8 @@ app/
 │   ├── auth.tsx             # Main login screen
 │   └── email-otp.tsx        # Email OTP authentication
 ├── (app)/                   # Protected routes (authenticated users)
-│   └── index.tsx            # User dashboard
+│   ├── index.tsx            # User dashboard
+│   └── deposit.tsx          # Deposit (onramp) test rig
 ├── .well-known/             # Passkey verification endpoints (must be at root)
 │   ├── assetlinks.json+api.ts           # Android Digital Asset Links
 │   └── apple-app-site-association+api.ts # iOS App Site Association
@@ -32,7 +33,14 @@ app/
 
 components/
 ├── LoginScreen.tsx          # Auth method selection UI
-└── UserScreen.tsx           # Post-auth dashboard with wallet management
+├── UserScreen.tsx           # Post-auth dashboard with wallet management
+└── deposit/                 # Deposit (onramp) flows
+    ├── DepositScreen.tsx    # Hub: scenario switcher + resolved payment options
+    ├── BuyFlow.tsx          # Fiat onramp (amount, quote, wallet-pay OTP, payment sheet)
+    ├── CryptoFlow.tsx       # Self-custody transfer via Relay deposit address
+    ├── CexFlow.tsx          # Coinbase exchange pay-link
+    ├── SessionStatus.tsx    # Live session status line
+    └── fundingConfig.ts     # Targets, region scenarios, local API types
 ```
 
 ## Authentication Methods
@@ -53,8 +61,31 @@ import {
   useEmailAuthOtp,   // Email OTP auth
   usePasskeySupport, // Check passkey availability
   useEmbeddedEthereumWallet, // Wallet management
+  useFunding,        // Deposit sessions (create, fund, track, payLink)
+  useFundingChains,  // Source chains/currencies for crypto deposits
+  useWalletPayVerification, // Coinbase wallet-pay email/phone OTP identity
+  useOpenfortClient, // Raw openfort-js client (funding.sessions.methods/quote)
 } from "@openfort/react-native";
+import { OnrampPaymentSheet } from "@openfort/react-native"; // Coinbase Apple/Google Pay WebView
 ```
+
+## Deposit (Onramp) Testing
+
+The "Add funds" button on the dashboard (Ethereum tab) opens `/deposit`, mirroring the
+openfort-react playground's funding test rig:
+
+- **Funding scenarios card** — simulates the buyer's region (US / DE / BR presets, plus
+  ES/FR/GB and detect-by-IP) via an explicit `country` override on every funding call.
+  A dev device has no CDN geo header, so without it every buyer looks rest-of-world.
+- **Deposit target** — Base USDC (default), Ethereum USDC, or Base Sepolia ETH. Fiat
+  coverage is mainnet-only: the testnet target shows no fiat rows by design.
+- **Fiat rows** are resolved server-side (`funding.sessions.methods`); the provider
+  (Coinbase/Stripe) is auto-selected and never shown. `native` rows run wallet-pay OTP
+  verification then mount `OnrampPaymentSheet`; `popup` rows open the hosted checkout in
+  the browser; `embedded` (Stripe Link) rows are shown disabled — the flow needs Stripe's
+  web JS and isn't supported natively.
+- **Sandbox**: on a `pk_test_` key, wallet-pay accepts `tester@sandbox.test` and phone
+  `+10005550100`; the payment sheet uses Coinbase's test popup.
 
 ## Supported Chains
 

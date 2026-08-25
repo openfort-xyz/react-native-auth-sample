@@ -10,6 +10,7 @@ import {
 	useUser,
 } from "@openfort/react-native";
 import * as Clipboard from "expo-clipboard";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -57,6 +58,7 @@ export const UserScreen = () => {
 	const [copiedKey, setCopiedKey] = useState<string | null>(null);
 	const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+	const router = useRouter();
 	const { signOut } = useSignOut();
 	const { user } = useUser();
 	const [connectingWalletAddress, setConnectingWalletAddress] = useState<string | null>(null);
@@ -417,6 +419,14 @@ export const UserScreen = () => {
 							</Text>
 						) : null}
 						<View style={styles.actionRow}>
+							{activeTab === "ethereum" ? (
+								<Button
+									title="Add funds"
+									icon="cash-outline"
+									size="sm"
+									onPress={() => router.push("/deposit")}
+								/>
+							) : null}
 							<Button
 								title="Sign"
 								icon="create-outline"

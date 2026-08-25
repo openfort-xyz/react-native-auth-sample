@@ -15,10 +15,12 @@
     "lint": "expo lint"
   },
   "dependencies": {
-    "@openfort/react-native": "1.1.5",
+    "@expo/vector-icons": "15.1.1",
+    "@openfort/react-native": "^2.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.1.6",
+    "@stripe/stripe-react-native": "0.52.0-crypto-onramp-2-private-beta.4",
     "@walletconnect/sign-client": "2.23.1",
     "expo": "~55.0.8",
     "expo-apple-authentication": "~55.0.9",
@@ -64,6 +66,9 @@
     "overrides": {
       "picomatch@<4.0.4": "4.0.4",
       "brace-expansion@<2": "2.0.1"
+    },
+    "patchedDependencies": {
+      "@stripe/stripe-react-native@0.52.0-crypto-onramp-2-private-beta.4": "patches/@stripe__stripe-react-native@0.52.0-crypto-onramp-2-private-beta.4.patch"
     }
   },
   "private": true
