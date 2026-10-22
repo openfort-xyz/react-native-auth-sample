@@ -15,7 +15,7 @@
     "lint": "expo lint"
   },
   "dependencies": {
-    "@openfort/react-native": "1.1.5",
+    "@openfort/react-native": "1.1.7",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.1.6",
@@ -63,7 +63,8 @@
   "pnpm": {
     "overrides": {
       "picomatch@<4.0.4": "4.0.4",
-      "brace-expansion@<2": "2.0.1"
+      "axios@<1.20.0": "1.20.0",
+      "ws@>=8 <8.21.0": "8.21.0"
     }
   },
   "private": true
